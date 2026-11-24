@@ -1,5 +1,5 @@
 // Service worker simples: network-first para navegação, cache-first para assets.
-const CACHE = 'nutrivida-v3';
+const CACHE = 'nutrivida-v4';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -20,7 +20,8 @@ self.addEventListener('fetch', (e) => {
 
   if (request.mode === 'navigate') {
     e.respondWith(
-      fetch(request)
+      // 'no-cache' revalida com o servidor: uma versão nova publicada aparece na hora
+      fetch(request, { cache: 'no-cache' })
         .then((res) => { const copy = res.clone(); caches.open(CACHE).then((c) => c.put('index.html', copy)); return res; })
         .catch(() => caches.match('index.html'))
     );
