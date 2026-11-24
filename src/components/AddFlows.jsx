@@ -28,7 +28,13 @@ export function guessMeal(meals) {
 
 export function useAIStatus() {
   const [s, setS] = useState({ loading: true, ai: null })
-  useEffect(() => { let on = true; getAI().then((ai) => on && setS({ loading: false, ai })); return () => { on = false } }, [])
+  useEffect(() => {
+    let on = true
+    const load = () => getAI().then((ai) => on && setS({ loading: false, ai }))
+    load()
+    window.addEventListener('nutrivida-ai-changed', load)
+    return () => { on = false; window.removeEventListener('nutrivida-ai-changed', load) }
+  }, [])
   return s
 }
 
@@ -44,8 +50,8 @@ function MealSelect({ value, onChange, id }) {
 function AIUnavailable() {
   return (
     <div className="rounded-2xl bg-amber-50 p-4 text-[13px] text-amber-900 dark:bg-amber-400/10 dark:text-amber-200">
-      <p className="flex items-center gap-2 font-bold"><AlertCircle size={16} /> IA indisponível aqui</p>
-      <p className="mt-1">A IA funciona quando você abre o NutriVida pelo link do claude.ai, com sua conta conectada. Você ainda pode buscar o alimento ou cadastrar manualmente.</p>
+      <p className="flex items-center gap-2 font-bold"><AlertCircle size={16} /> Ative a IA para usar este recurso</p>
+      <p className="mt-1">Vá em <b>Metas → Inteligência artificial</b> e cole sua chave da API do Claude. Ela fica salva só neste aparelho. Enquanto isso, você pode buscar o alimento ou cadastrar manualmente.</p>
     </div>
   )
 }

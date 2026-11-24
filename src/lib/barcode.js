@@ -1,9 +1,11 @@
 // Leitura e consulta de código de barras (EAN-13/EAN-8/UPC).
-import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library'
-
-const FORMATS = [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.CODE_128]
-const hints = new Map([[DecodeHintType.POSSIBLE_FORMATS, FORMATS], [DecodeHintType.TRY_HARDER, true]])
-export const newReader = () => new BrowserMultiFormatReader(hints, 300)
+// ZXing carregado sob demanda (só quando a pessoa escaneia)
+export async function newReader() {
+  const { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } = await import('@zxing/library')
+  const formats = [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.CODE_128]
+  const hints = new Map([[DecodeHintType.POSSIBLE_FORMATS, formats], [DecodeHintType.TRY_HARDER, true]])
+  return new BrowserMultiFormatReader(hints, 300)
+}
 
 /** Lê o código de uma foto. Tenta o BarcodeDetector nativo (Chrome/Android) e depois o ZXing
  *  em várias escalas e recortes — fotos de celular são grandes e o código costuma ocupar pouco espaço. */
@@ -16,7 +18,7 @@ export async function decodeFromFile(file) {
       if (found[0]?.rawValue) return found[0].rawValue
     } catch { /* cai para o ZXing */ }
   }
-  const reader = newReader()
+  const reader = await newReader()
   const tries = [[1, 1600], [1, 1000], [0.6, 1200], [0.4, 1000]] // [fração central da imagem, largura alvo]
   for (const [frac, target] of tries) {
     for (const rot of [0, 90]) {
@@ -37,7 +39,7 @@ export async function decodeFromFile(file) {
 
 /** Câmera ao vivo. Retorna função para parar. */
 export async function startLiveScan(video, onCode) {
-  const reader = newReader()
+  const reader = await newReader()
   await reader.decodeFromConstraints({ video: { facingMode: 'environment' } }, video, (res) => { if (res) onCode(res.getText()) })
   return () => reader.reset()
 }

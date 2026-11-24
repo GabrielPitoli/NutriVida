@@ -10,6 +10,7 @@
     "build:single": "vite build --mode single && node scripts/build-artifact.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.14.0",
     "@zxing/library": "^0.21.3",
     "lucide-react": "^0.460.0",
     "react": "^18.3.1",

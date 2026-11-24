@@ -5,6 +5,7 @@ import Header, { SyncBadge } from '../components/Header'
 import { Field, Sheet } from '../components/ui'
 import { BodyFields, ActivityPicker, GoalPicker } from '../components/ProfileForm'
 import GoalsResult from '../components/GoalsResult'
+import AISettings from '../components/AISettings'
 import { bmi, fmt } from '../lib/nutrition'
 
 function Section({ title, children, icon: I }) {
@@ -90,6 +91,8 @@ export default function Profile() {
       </Section>
 
       <Section title="Ajuste fino"><ManualGoals /></Section>
+
+      <Section title="Inteligência artificial"><AISettings /></Section>
 
       <Section title="Aparência">
         <div className="seg">

@@ -3,20 +3,35 @@
  * Cada chamada é independente: enviamos instruções + dados + formato de resposta.
  * Fora do claude.ai `getAI()` resolve null e a interface mostra o recurso como indisponível.
  */
+import { getApiKey, createKeySample } from './aiKey'
+
 let aiPromise = null
+/**
+ * Resolve de onde vem a IA:
+ *  1. claude.ai (capacidade `sample`, usa a conta Claude de quem está usando);
+ *  2. chave de API própria guardada no aparelho (versão hospedada, ex.: GitHub Pages);
+ *  3. nenhuma → null (a interface mostra como ativar).
+ */
 export function getAI() {
   if (!aiPromise) {
     aiPromise = (async () => {
       const claude = window.claude
-      if (!claude?.use) return null
-      const sample = await claude.use('sample').catch(() => null)
-      if (!sample) return null
-      const limits = await sample.limits().catch(() => null)
-      return { sample, images: !!limits?.images }
+      if (claude?.use) {
+        const sample = await claude.use('sample').catch(() => null)
+        if (sample) {
+          const limits = await sample.limits().catch(() => null)
+          return { sample, images: !!limits?.images, provider: 'claude' }
+        }
+      }
+      const key = getApiKey()
+      if (key) return { sample: createKeySample(key), images: true, provider: 'apikey' }
+      return null
     })()
   }
   return aiPromise
 }
+/** Chamar depois de salvar/remover a chave. */
+export function resetAI() { aiPromise = null; window.dispatchEvent(new Event('nutrivida-ai-changed')) }
 
 let dictPromise = null
 export function getDictation() {
@@ -33,6 +48,10 @@ export function aiErrorText(e) {
     case 'image_rejected': return 'Não consegui ler essa imagem. Tente outra foto (JPG ou PNG).'
     case 'images_unavailable': return 'Envio de fotos para a IA não está disponível aqui.'
     case 'sampling_disabled': return 'A IA está desativada para a sua conta.'
+    case 'bad_key': return 'Chave de API inválida ou sem permissão. Confira em Metas → Inteligência artificial.'
+    case 'bad_request': return 'A API recusou o pedido. Verifique se sua conta da API tem créditos (console.anthropic.com → Billing).'
+    case 'refused': return 'A IA não pôde responder a esse pedido. Tente descrever de outro jeito.'
+    case 'network': return 'Sem conexão com a IA. Verifique sua internet.'
     default: return 'A IA não respondeu agora. Verifique a conexão e tente de novo.'
   }
 }

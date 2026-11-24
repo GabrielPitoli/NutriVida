@@ -1,11 +1,15 @@
 # NutriVida
 
+**Acesse o app:** https://gabrielpitoli.github.io/NutriVida/
+
+No Android, abra o link no Chrome e toque em **⋮ → Instalar app**. No iPhone, abra no Safari e toque em **Compartilhar → Adicionar à Tela de Início**.
+
 App web mobile-first (PWA) de nutrição, hidratação, treinos e metas. Feito com React, Tailwind CSS e Lucide.
 
 ## Funcionalidades
 - **Hoje:** anel de calorias (meta − consumidas + treino), barras de proteínas, carboidratos e gorduras, copo de água animado (+200/+300/+500 ml ou outro valor), contador de refeições e gráfico dos últimos 7 dias.
 - **Diário:** 6 refeições padrão, mais refeições personalizadas. Busca em mais de 70 alimentos brasileiros (por porção caseira ou em gramas) e cadastro manual. Kcal, P, C, G e fibras por item e por refeição. Aba de atividades com gasto calculado por MET.
-- **Receitas:** 16 receitas com filtros por refeição e objetivo, ingredientes que dá para marcar, modo de preparo, tabela nutricional e botão "Registrar no meu dia".
+- **Receitas:** 46 receitas com fotos, filtros por refeição e objetivo, ingredientes que dá para marcar, modo de preparo, tabela nutricional e botão "Registrar no meu dia".
 - **Cardápios:** Hipertrofia, Energia e Definição, com porções ajustadas automaticamente à sua meta calórica e aplicação ao dia em um toque.
 - **Metas:** cadastro inicial em 3 passos. Cálculo da meta calórica (TMB de Mifflin-St Jeor × fator de atividade ± ajuste do objetivo, com piso de segurança), dos macros (g/kg de proteína e % de gordura), da água (35 ml/kg) e das fibras. Também dá para ajustar tudo manualmente e escolher tema claro, escuro ou do sistema.
 - **Recompensas (estilo Duolingo):** 5 missões diárias valem XP. Cumprir 3 delas garante o dia e mantém a ofensiva 🔥. Tem níveis de "Iniciante" a "Ícone", 12 medalhas, calendário da semana e aviso quando a ofensiva está em risco. Tudo é calculado a partir dos registros, então fica igual em qualquer aparelho.
@@ -22,13 +26,22 @@ App web mobile-first (PWA) de nutrição, hidratação, treinos e metas. Feito c
 - **Fotos das receitas:** vêm do Openverse, com licenças livres (CC BY, CC BY-SA, CC0). Autor e licença aparecem em cada receita (`src/data/photoCredits.json`). Para baixar ou trocar fotos: `python3 scripts/photos.py receita-id="termo de busca"`.
 - **Celebrações:** confete ao bater as metas, ao subir de nível e ao garantir a ofensiva do dia.
 
-### Onde a IA funciona
-Os recursos de IA (foto do prato, chat, leitura de rótulo e criar receita) funcionam quando o app é aberto pelo link do claude.ai, usando a conta de quem está usando. Em hospedagem própria, essas opções aparecem como indisponíveis. Para habilitá-las fora do claude.ai, seria preciso um backend próprio que chame a API do Claude, porque a chave não pode ficar no navegador.
+### Como ativar a IA
+O app não traz nenhuma chave de IA embutida. Quem quiser usar a foto do prato, a Nutri IA, a leitura de rótulo ou a criação de receitas com IA ativa com a **própria chave da API do Claude**:
 
-## Onde os dados ficam salvos
-`src/lib/storage.js` guarda tudo no aparelho (localStorage), então funciona offline. Quando um banco remoto está disponível, sincroniza com ele (vence a versão mais recente):
-- Na versão publicada no claude.ai, os dados vão para o banco de dados do Artifact, privados para cada usuário.
-- Em hospedagem própria, use o Supabase. O passo a passo e o SQL estão em `src/lib/adapters/supabase.example.js`.
+1. Crie uma conta em [console.anthropic.com](https://console.anthropic.com), adicione créditos e gere uma chave em **API Keys**.
+2. No app, vá em **Metas → Inteligência artificial**, cole a chave e toque em **Salvar e testar**.
+
+A chave fica salva **só no seu aparelho** e vai direto do seu navegador para a API da Anthropic. Ela não passa por nenhum servidor do projeto e não fica visível para mais ninguém. O custo é por uso, na sua própria conta da API: uma foto do prato custa em torno de US$ 0,01 a 0,03.
+
+## Privacidade e acesso
+- **Código:** o repositório é público. Qualquer pessoa pode ver e copiar o código, mas só o dono do repositório altera o que está aqui.
+- **Uso do app:** qualquer pessoa com o link usa o app. Não existe cadastro, login nem servidor do projeto.
+- **Dados:** refeições, água, treinos, perfil e receitas de cada pessoa ficam **apenas no navegador do próprio aparelho** (localStorage). Ninguém vê os dados de outra pessoa, nem o dono do repositório. Se você limpar os dados do navegador ou desinstalar o app, os registros somem.
+- **IA:** cada pessoa usa a própria chave, como explicado acima. Nenhuma chave ou conta fica vinculada ao app ou ao repositório.
+
+### Para desenvolvedores
+`src/lib/storage.js` guarda tudo no aparelho e já está pronto para sincronizar com um banco remoto, onde vence a versão mais recente. O exemplo com Supabase (SQL e passo a passo) está em `src/lib/adapters/supabase.example.js`.
 
 ## Base de produtos (código de barras)
 `public/products-br.json` é gerado a partir do export público do Open Food Facts (licença ODbL, © colaboradores do Open Food Facts):
