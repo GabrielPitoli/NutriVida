@@ -3,7 +3,8 @@ import { readFileSync, writeFileSync } from 'node:fs'
 const html = readFileSync('dist-single/index.html', 'utf8')
 const pick = (re) => [...html.matchAll(re)].map((m) => m[0]).join('\n')
 const styles = pick(/<style[\s\S]*?<\/style>/g)
-const scripts = pick(/<script[\s\S]*?<\/script>/g)
+// U+FFFD literal (vindo de bibliotecas minificadas) vira a escape \uFFFD, equivalente em JS
+const scripts = pick(/<script[\s\S]*?<\/script>/g).replace(/\uFFFD/g, '\\uFFFD')
 const fonts = pick(/<link[^>]+fonts\.googleapis\.com\/css2[^>]*>/g)
 const out = `<title>NutriVida</title>
 <meta name="claude:viewport-fit-sides" content="cover">
