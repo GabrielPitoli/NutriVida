@@ -36,11 +36,6 @@ Os recursos de IA (foto do prato, chat, leitura de rótulo e criar receita) func
 curl -sL https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz | gunzip | python3 scripts/build-products.py
 ```
 
-## Publicar no GitHub Pages
-O workflow `.github/workflows/deploy.yml` gera o site e publica a cada push na branch `main`.
-Para ativar, uma única vez: no repositório, vá em **Settings → Pages → Build and deployment → Source** e escolha **GitHub Actions**.
-O app fica em `https://SEU-USUARIO.github.io/NOME-DO-REPO/` e pode ser instalado no celular como aplicativo.
-
 ## Rodar
 ```bash
 npm install
