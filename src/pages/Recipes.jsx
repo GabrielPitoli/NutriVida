@@ -5,7 +5,6 @@ import Header from '../components/Header'
 import { Sheet, NutrientGrid, Stepper, Field } from '../components/ui'
 import { useAIStatus } from '../components/AddFlows'
 import { RECIPES, RECIPE_CATEGORIES, RECIPE_TAGS } from '../data/recipes'
-import CREDITS from '../data/photoCredits.json'
 import { FOODS } from '../data/foods'
 import { fmt, nutrientsFor, sumNutrients } from '../lib/nutrition'
 import { recipeFromIdea, coverDataUrl, aiErrorText } from '../lib/ai'
@@ -18,30 +17,19 @@ const CAT_ICON = { cafe: Coffee, almoco: UtensilsCrossed, lanche: Cookie, jantar
 const CAT_TO_MEAL = { cafe: 'cafe', almoco: 'almoco', lanche: 'lanche-tarde', jantar: 'jantar', treino: 'lanche-tarde' }
 const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 const ingText = (i) => (typeof i === 'string' ? i : i.text)
-// Na versão de arquivo único as fotos vão embutidas no HTML; na versão hospedada ficam em /recipes.
-const INLINE = import.meta.env.MODE === 'single' ? import.meta.glob('/public/recipes/*.webp', { eager: true, query: '?inline', import: 'default' }) : {}
-const photoOf = (r) => r.image || INLINE[`/public/recipes/${r.id}.webp`] || (CREDITS[r.id] ? `recipes/${r.id}.webp` : null)
+const CAT_STYLE = {
+  cafe: 'bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300',
+  almoco: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300',
+  lanche: 'bg-rose-100 text-rose-700 dark:bg-rose-400/15 dark:text-rose-300',
+  jantar: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-400/15 dark:text-indigo-300',
+  treino: 'bg-orange-100 text-orange-700 dark:bg-orange-400/15 dark:text-orange-300',
+}
 
-function Cover({ r, big }) {
+/** Ícone do tipo de refeição; nas receitas próprias com foto, mostra a foto da pessoa. */
+function RecipeIcon({ r, size = 52 }) {
   const I = CAT_ICON[r.category] || CookingPot
-  const [failed, setFailed] = useState(false)
-  const src = photoOf(r)
-  const hue = r.hue ?? 150
-  return (
-    <div className={`relative overflow-hidden ${big ? 'aspect-[16/10] rounded-3xl' : 'aspect-[4/3] rounded-2xl'}`}
-      style={{ background: `linear-gradient(135deg, hsl(${hue} 85% 62%), hsl(${(hue + 35) % 360} 75% 45%))` }}>
-      {src && !failed ? (
-        <img src={src} alt={r.name} loading="lazy" onError={() => setFailed(true)} className="absolute inset-0 h-full w-full object-cover" />
-      ) : (
-        <>
-          <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/15" />
-          <I className="absolute bottom-3 right-3 text-white/90" size={big ? 56 : 34} strokeWidth={1.6} />
-        </>
-      )}
-      <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-black/45 py-0.5 pl-0.5 pr-2 text-[11px] font-bold text-white backdrop-blur"><QualityFace grade={gradeRecipe(r).grade} size={16} />{fmt(r.nutrition.kcal)} kcal</span>
-      {r.mine && <span className="absolute right-2.5 top-2.5 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Minha</span>}
-    </div>
-  )
+  if (r.image) return <img src={r.image} alt="" className="shrink-0 rounded-2xl object-cover" style={{ width: size, height: size }} />
+  return <span className={`grid shrink-0 place-items-center rounded-2xl ${CAT_STYLE[r.category] || CAT_STYLE.almoco}`} style={{ width: size, height: size }}><I size={size * 0.46} /></span>
 }
 
 function RecipeDetail({ recipe, onClose, onEdit }) {
@@ -52,7 +40,6 @@ function RecipeDetail({ recipe, onClose, onEdit }) {
   const [logged, setLogged] = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
   const n = recipe.nutrition
-  const credit = CREDITS[recipe.id]
   const scaled = Object.fromEntries(Object.entries(n).map(([k, v]) => [k, k === 'kcal' ? Math.round(v * servings) : Math.round(v * servings * 10) / 10]))
   const log = () => {
     addFoods(mealId, [{ name: recipe.name, recipeId: recipe.id, q: gradeRecipe(recipe).grade, portion: `${fmt(servings, 1)} porç${servings > 1 ? 'ões' : 'ão'}`, ...scaled }], 'Receita registrada no diário')
@@ -74,13 +61,14 @@ function RecipeDetail({ recipe, onClose, onEdit }) {
           </button>
         </div>
       }>
-      <Cover r={recipe} big />
-      {credit && (
-        <p className="mt-1.5 text-[10.5px] muted">
-          Foto: {credit.artist} · {credit.page ? <a href={credit.page} target="_blank" rel="noopener noreferrer" className="underline">{credit.license}</a> : credit.license}
-        </p>
-      )}
-      <h3 className="mt-3 font-display text-[26px] font-extrabold leading-tight tracking-tight">{recipe.name}</h3>
+      {recipe.image && <img src={recipe.image} alt={recipe.name} className="mb-3 aspect-[16/10] w-full rounded-3xl object-cover" />}
+      <div className="flex items-start gap-3">
+        {!recipe.image && <RecipeIcon r={recipe} size={48} />}
+        <div className="min-w-0">
+          <p className="label">{RECIPE_CATEGORIES.find((c) => c.id === recipe.category)?.label}</p>
+          <h3 className="font-display text-[24px] font-extrabold leading-tight tracking-tight">{recipe.name}</h3>
+        </div>
+      </div>
       <div className="mt-2 flex flex-wrap gap-3 text-sm muted">
         <span className="inline-flex items-center gap-1"><Clock size={15} /> {recipe.time} min</span>
         <span className="inline-flex items-center gap-1"><Users size={15} /> Rende {recipe.servings} porç{recipe.servings > 1 ? 'ões' : 'ão'}</span>
@@ -362,20 +350,25 @@ export default function Recipes() {
           <button className="btn-primary mt-4" onClick={() => setEditing('new')}><Plus size={16} /> Criar minha receita</button>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <ul className="mt-4 space-y-2">
           {list.map((r) => (
-            <button key={r.id} onClick={() => setOpen(r)} className="card !p-2 text-left transition active:scale-[0.98]">
-              <Cover r={r} />
-              <div className="px-1.5 pb-1.5 pt-2.5">
-                <h3 className="line-clamp-2 min-h-[2.5em] text-[14px] font-bold leading-tight">{r.name}</h3>
-                <p className="mt-1.5 flex items-center gap-2 text-[11.5px] muted tnum">
-                  <span className="inline-flex items-center gap-0.5"><Clock size={12} />{r.time}min</span>
-                  <span className="font-semibold text-rose-500">P {fmt(r.nutrition.protein)}g</span>
-                </p>
-              </div>
-            </button>
+            <li key={r.id}>
+              <button onClick={() => setOpen(r)} className="card flex w-full items-center gap-3 !p-3 text-left transition active:scale-[0.99]">
+                <RecipeIcon r={r} />
+                <div className="min-w-0 flex-1">
+                  <h3 className="line-clamp-2 text-[15px] font-bold leading-snug">{r.name}</h3>
+                  <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[12px] muted tnum">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">{fmt(r.nutrition.kcal)} kcal</span>
+                    <span className="inline-flex items-center gap-0.5"><Clock size={12} />{r.time} min</span>
+                    <span className="font-semibold text-rose-500">P {fmt(r.nutrition.protein)} g</span>
+                    {r.mine && <span className="rounded-full bg-emerald-100 px-1.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">Minha</span>}
+                  </p>
+                </div>
+                <QualityFace grade={gradeRecipe(r).grade} size={24} />
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
       {list.length === 0 && !(seg === 'minhas' && myRecipes.length === 0) && <p className="py-12 text-center text-sm muted">Nenhuma receita com esses filtros.</p>}
       {open && <RecipeDetail recipe={open} onClose={() => setOpen(null)} onEdit={(rec) => { setOpen(null); setEditing(rec) }} />}

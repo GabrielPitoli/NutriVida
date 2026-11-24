@@ -1,6 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+// Fontes embutidas no app (nenhuma requisição a servidores de terceiros)
+import '@fontsource-variable/bricolage-grotesque/opsz.css'
+import '@fontsource-variable/plus-jakarta-sans'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(<React.StrictMode><App /></React.StrictMode>)

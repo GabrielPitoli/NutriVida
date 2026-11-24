@@ -9,7 +9,7 @@ App web mobile-first (PWA) de nutrição, hidratação, treinos e metas. Feito c
 ## Funcionalidades
 - **Hoje:** anel de calorias (meta − consumidas + treino), barras de proteínas, carboidratos e gorduras, copo de água animado (+200/+300/+500 ml ou outro valor), contador de refeições e gráfico dos últimos 7 dias.
 - **Diário:** 6 refeições padrão, mais refeições personalizadas. Busca em mais de 70 alimentos brasileiros (por porção caseira ou em gramas) e cadastro manual. Kcal, P, C, G e fibras por item e por refeição. Aba de atividades com gasto calculado por MET.
-- **Receitas:** 46 receitas com fotos, filtros por refeição e objetivo, ingredientes que dá para marcar, modo de preparo, tabela nutricional e botão "Registrar no meu dia".
+- **Receitas:** 46 receitas com filtros por refeição e objetivo, ingredientes que dá para marcar, modo de preparo, tabela nutricional e botão "Registrar no meu dia".
 - **Cardápios:** Hipertrofia, Energia e Definição, com porções ajustadas automaticamente à sua meta calórica e aplicação ao dia em um toque.
 - **Metas:** cadastro inicial em 3 passos. Cálculo da meta calórica (TMB de Mifflin-St Jeor × fator de atividade ± ajuste do objetivo, com piso de segurança), dos macros (g/kg de proteína e % de gordura), da água (35 ml/kg) e das fibras. Também dá para ajustar tudo manualmente e escolher tema claro, escuro ou do sistema.
 - **Recompensas (estilo Duolingo):** 5 missões diárias valem XP. Cumprir 3 delas garante o dia e mantém a ofensiva 🔥. Tem níveis de "Iniciante" a "Ícone", 12 medalhas, calendário da semana e aviso quando a ofensiva está em risco. Tudo é calculado a partir dos registros, então fica igual em qualquer aparelho.
@@ -23,7 +23,6 @@ App web mobile-first (PWA) de nutrição, hidratação, treinos e metas. Feito c
   3. nota da IA;
   4. cálculo próprio por densidade de nutrientes (`src/lib/quality.js`).
 - **Minhas receitas:** crie receitas com foto, ingredientes e modo de preparo. As calorias são calculadas pelos ingredientes do banco de alimentos. Também dá para pedir que a IA monte a receita a partir de uma ideia.
-- **Fotos das receitas:** vêm do Openverse, com licenças livres (CC BY, CC BY-SA, CC0). Autor e licença aparecem em cada receita (`src/data/photoCredits.json`). Para baixar ou trocar fotos: `python3 scripts/photos.py receita-id="termo de busca"`.
 - **Celebrações:** confete ao bater as metas, ao subir de nível e ao garantir a ofensiva do dia.
 
 ### Como ativar a IA
