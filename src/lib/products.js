@@ -3,7 +3,7 @@
 let cache = null
 export function loadProducts() {
   if (!cache) {
-    cache = import('../../public/products-br.json').then((m) => {
+    cache = import('../data/products-br.json').then((m) => {
       const d = m.default || m
       const byCode = new Map()
       const list = d.items.map((x) => {

@@ -1,4 +1,5 @@
 import { Home, NotebookPen, ChefHat, CalendarRange, UserRound } from 'lucide-react'
+import { t } from '../i18n'
 
 export const TABS = [
   { id: 'hoje', label: 'Hoje', icon: Home },
@@ -22,7 +23,7 @@ export default function BottomNav({ tab, onChange }) {
                 <span className={`grid h-8 w-14 place-items-center rounded-full transition-all duration-300 ${on ? 'bg-emerald-100 dark:bg-emerald-400/15' : 'group-active:bg-slate-100 dark:group-active:bg-white/5'}`}>
                   <Icon size={21} strokeWidth={on ? 2.4 : 2} />
                 </span>
-                {label}
+                {t(label)}
               </button>
             </li>
           )

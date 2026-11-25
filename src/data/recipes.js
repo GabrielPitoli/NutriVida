@@ -126,7 +126,7 @@ export const RECIPES = [
     nutrition: { kcal: 520, protein: 36, carbs: 38, fat: 23, fiber: 4 },
     ingredients: ['1 posta de salmão (130 g)', '4 colheres de sopa de arroz integral', '1 maço pequeno de aspargos ou vagem', 'Limão-siciliano, sal e pimenta'],
     steps: ['Tempere o salmão com limão, sal e pimenta.', 'Grelhe com a pele para baixo por 4 min e vire por mais 3 min.', 'Salteie os aspargos rapidamente na mesma frigideira.', 'Sirva com o arroz integral.'],
-  },,  // ---------- novas receitas ----------
+  },  // ---------- novas receitas ----------
   {
     id: 'pao-de-queijo-frigideira', name: 'Pão de queijo de frigideira', category: 'cafe', tags: ['energia', 'vegetariana'],
     time: 10, servings: 1, hue: 45,

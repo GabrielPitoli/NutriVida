@@ -10,6 +10,8 @@ import { gradeItem } from '../lib/quality'
 import { QualityFace } from './Quality'
 import { findProduct } from '../lib/products'
 
+import { locale, t } from '../i18n';
+
 // ------------------------------------------------------------------ contexto dos fluxos
 const FlowCtx = createContext({ open: () => {} })
 export const useAddFlow = () => useContext(FlowCtx)
@@ -41,19 +43,21 @@ export function useAIStatus() {
 function MealSelect({ value, onChange, id }) {
   const { day } = useApp()
   return (
-    <select id={id} aria-label="Refeição" className="input !py-2.5" value={value} onChange={(e) => onChange(e.target.value)}>
-      {day.meals.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+    <select id={id} aria-label={t('Refeição')} className="input !py-2.5" value={value} onChange={(e) => onChange(e.target.value)}>
+      {day.meals.map((m) => <option key={m.id} value={m.id}>{t(m.name)}</option>)}
     </select>
-  )
+  );
 }
 
 function AIUnavailable() {
   return (
     <div className="rounded-2xl bg-amber-50 p-4 text-[13px] text-amber-900 dark:bg-amber-400/10 dark:text-amber-200">
-      <p className="flex items-center gap-2 font-bold"><AlertCircle size={16} /> Ative a IA para usar este recurso</p>
-      <p className="mt-1">Vá em <b>Metas → Inteligência artificial</b> e cole sua chave da API do Claude. Ela fica salva só neste aparelho. Enquanto isso, você pode buscar o alimento ou cadastrar manualmente.</p>
+      <p className="flex items-center gap-2 font-bold"><AlertCircle size={16} /> {t('Ative a IA para usar este recurso')}</p>
+      <p className="mt-1">{t('Vá em')} <b>{t('Metas → Inteligência artificial')}</b> {t(
+          'e cole sua chave da API do Claude. Ela fica salva só neste aparelho. Enquanto isso, você pode buscar o alimento ou cadastrar manualmente.'
+        )}</p>
     </div>
-  )
+  );
 }
 
 /** Lista editável de alimentos sugeridos pela IA: ajusta gramas (recalcula proporcionalmente) e remove itens. */
@@ -71,11 +75,11 @@ function FoodReview({ foods, setFoods }) {
         <li key={i} className="rounded-2xl bg-white p-3 dark:bg-white/5">
           <div className="flex items-start gap-2">
             <p className="flex min-w-0 flex-1 items-center gap-1.5 text-[14px] font-semibold leading-snug"><QualityFace grade={gradeItem(f)} size={16} /><span>{f.name}</span></p>
-            <button onClick={() => setFoods(foods.filter((_, j) => j !== i))} aria-label={`Remover ${f.name}`} className="-mr-1 -mt-1 p-1 text-slate-400"><X size={16} /></button>
+            <button onClick={() => setFoods(foods.filter((_, j) => j !== i))} aria-label={t('Remover {x}', { x: f.name })} className="-mr-1 -mt-1 p-1 text-slate-400"><X size={16} /></button>
           </div>
           <div className="mt-1.5 flex items-center gap-2">
             <div className="relative w-[84px] shrink-0">
-              <input aria-label={`Gramas de ${f.name}`} inputMode="numeric" className="input !py-1.5 !pl-2 !pr-6 text-right text-sm tnum" value={f.grams || ''}
+              <input aria-label={t('Gramas de {x}', { x: f.name })} inputMode="numeric" className="input !py-1.5 !pl-2 !pr-6 text-right text-sm tnum" value={f.grams || ''}
                 onChange={(e) => setGrams(i, parseInt(e.target.value.replace(/\D/g, ''), 10) || 0)} />
               <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] muted">g</span>
             </div>
@@ -121,48 +125,49 @@ function PlateSheet({ open, onClose, mealId: initialMeal }) {
   const total = sumNutrients(foods)
 
   return (
-    <Sheet open={open} onClose={close} title="Foto do prato" full
+    <Sheet open={open} onClose={close} title={t('Foto do prato')} full
       footer={state === 'done' && foods.length > 0 && (
         <div className="flex gap-2">
           <div className="w-[46%]"><MealSelect id="plate-meal" value={mealId} onChange={setMealId} /></div>
-          <button className="btn-primary flex-1" onClick={() => { addFoods(mealId, stripBase(foods), `${foods.length} alimentos adicionados`); close() }}>
-            <Check size={16} /> Adicionar {fmt(total.kcal)} kcal
-          </button>
+          <button className="btn-primary flex-1" onClick={() => { addFoods(mealId, stripBase(foods), t('{n} alimentos adicionados', { n: foods.length })); close() }}>
+            <Check size={16} /> {t('Adicionar')} {fmt(total.kcal)} kcal
+                      </button>
         </div>
       )}>
       {loading ? <Loader2 className="mx-auto my-10 animate-spin text-emerald-500" /> : !ai || !ai.images ? <AIUnavailable /> : (
         <div className="space-y-4">
           {!preview ? (
             <>
-              <p className="text-sm muted">Tire uma foto da sua refeição e a IA identifica os alimentos e estima as porções. Depois é só conferir e ajustar.</p>
+              <p className="text-sm muted">{t(
+                'Tire uma foto da sua refeição e a IA identifica os alimentos e estima as porções. Depois é só conferir e ajustar.'
+              )}</p>
               <label className="flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-emerald-300 bg-emerald-50/60 text-emerald-700 active:scale-[0.99] dark:border-emerald-400/30 dark:bg-emerald-400/5 dark:text-emerald-300">
                 <span className="grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"><Camera size={30} /></span>
-                <span className="font-bold">Tirar foto</span>
+                <span className="font-bold">{t('Tirar foto')}</span>
                 <input id="plate-camera" type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
               </label>
-              <label className="btn-ghost w-full cursor-pointer"><ImagePlus size={16} /> Escolher da galeria
-                <input id="plate-gallery" type="file" accept="image/*" className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
+              <label className="btn-ghost w-full cursor-pointer"><ImagePlus size={16} /> {t('Escolher da galeria')}<input id="plate-gallery" type="file" accept="image/*" className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
               </label>
-              <p className="text-center text-[11px] muted">Dica: fotografe de cima, com boa luz e o prato inteiro.</p>
+              <p className="text-center text-[11px] muted">{t('Dica: fotografe de cima, com boa luz e o prato inteiro.')}</p>
             </>
           ) : (
             <>
               <div className="relative overflow-hidden rounded-3xl">
-                <img src={preview} alt="Foto da refeição" className="aspect-[4/3] w-full object-cover" />
+                <img src={preview} alt={t('Foto da refeição')} className="aspect-[4/3] w-full object-cover" />
                 {state === 'working' && (
                   <div className="absolute inset-0 grid place-items-center bg-slate-950/40 text-white">
-                    <div className="text-center"><Loader2 size={34} className="mx-auto animate-spin" /><p className="mt-2 text-sm font-semibold">Analisando seu prato…</p></div>
+                    <div className="text-center"><Loader2 size={34} className="mx-auto animate-spin" /><p className="mt-2 text-sm font-semibold">{t('Analisando seu prato…')}</p></div>
                     <div className="absolute inset-x-0 top-0 h-1 animate-[wave_1.6s_linear_infinite] bg-gradient-to-r from-transparent via-emerald-300 to-transparent" />
                   </div>
                 )}
-                <button onClick={reset} className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-black/50 text-white" aria-label="Trocar foto"><RefreshCw size={16} /></button>
+                <button onClick={reset} className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-black/50 text-white" aria-label={t('Trocar foto')}><RefreshCw size={16} /></button>
               </div>
               {state !== 'done' && (
                 <>
-                  <input id="plate-hint" className="input" placeholder="Opcional: detalhes (ex.: arroz integral, frango grelhado)" value={hint} onChange={(e) => setHint(e.target.value)} />
+                  <input id="plate-hint" className="input" placeholder={t('Opcional: detalhes (ex.: arroz integral, frango grelhado)')} value={hint} onChange={(e) => setHint(e.target.value)} />
                   {state === 'working'
-                    ? <button className="btn-ghost w-full" onClick={() => ctl.current?.abort()}><Square size={14} /> Parar</button>
-                    : <button className="btn-primary w-full !py-3.5" onClick={run}><Sparkles size={16} /> Identificar alimentos</button>}
+                    ? <button className="btn-ghost w-full" onClick={() => ctl.current?.abort()}><Square size={14} /> {t('Parar')}</button>
+                    : <button className="btn-primary w-full !py-3.5" onClick={run}><Sparkles size={16} /> {t('Identificar alimentos')}</button>}
                 </>
               )}
               {err && <p className="rounded-2xl bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-400/10 dark:text-rose-300">{err}</p>}
@@ -170,10 +175,10 @@ function PlateSheet({ open, onClose, mealId: initialMeal }) {
                 <div className="animate-fade-in space-y-3">
                   <div className="flex items-start gap-2">
                     <Bot size={18} className="mt-0.5 shrink-0 text-emerald-600" />
-                    <p className="text-sm">{result.description}{result.confidence && <span className="muted"> · confiança {result.confidence}</span>}</p>
+                    <p className="text-sm">{result.description}{result.confidence && <span className="muted"> {t('· confiança')} {result.confidence}</span>}</p>
                   </div>
-                  {foods.length ? <FoodReview foods={foods} setFoods={setFoods} /> : <p className="text-sm muted">Nenhum alimento identificado. Tente outra foto.</p>}
-                  <p className="text-[11px] muted">Porções estimadas pela imagem. Ajuste as gramas se souber o valor exato.</p>
+                  {foods.length ? <FoodReview foods={foods} setFoods={setFoods} /> : <p className="text-sm muted">{t('Nenhum alimento identificado. Tente outra foto.')}</p>}
+                  <p className="text-[11px] muted">{t('Porções estimadas pela imagem. Ajuste as gramas se souber o valor exato.')}</p>
                 </div>
               )}
             </>
@@ -181,7 +186,7 @@ function PlateSheet({ open, onClose, mealId: initialMeal }) {
         </div>
       )}
     </Sheet>
-  )
+  );
 }
 
 // ------------------------------------------------------------------ Código de barras
@@ -209,7 +214,7 @@ function BarcodeSheet({ open, onClose, mealId: initialMeal }) {
 
   const lookup = async (c) => {
     stopLive()
-    if (!validEan(c)) { setMsg('Código inválido. Confira os números embaixo das barras.'); return }
+    if (!validEan(c)) { setMsg(t('Código inválido. Confira os números embaixo das barras.')); return }
     setCode(c); setStage('looking'); setMsg('')
     const mine = customFoods.find((f) => f.barcode === c)
     if (mine) { setFood(mine); setStage('found'); return }
@@ -228,13 +233,13 @@ function BarcodeSheet({ open, onClose, mealId: initialMeal }) {
       stopRef.current = await startLiveScan(video.current, (c) => { if (navigator.vibrate) navigator.vibrate(60); lookup(c) })
     } catch {
       setLive(false)
-      setMsg('Não foi possível abrir a câmera ao vivo. Use "Tirar foto do código".')
+      setMsg(t('Não foi possível abrir a câmera ao vivo. Use "Tirar foto do código".'))
     }
   }
   const fromPhoto = async (f) => {
     if (!f) return
-    setMsg('Lendo o código…')
-    try { await lookup(await decodeFromFile(f)) } catch { setMsg('Não consegui ler o código nessa foto. Dicas: deixe as barras na horizontal, ocupando boa parte da foto, com luz e sem reflexo. Ou digite os números que ficam embaixo das barras.') }
+    setMsg(t('Lendo o código…'))
+    try { await lookup(await decodeFromFile(f)) } catch { setMsg(t('Não consegui ler o código nessa foto. Dicas: deixe as barras na horizontal, ocupando boa parte da foto, com luz e sem reflexo. Ou digite os números que ficam embaixo das barras.')) }
   }
   const fromLabel = async (f) => {
     if (!f) return
@@ -244,7 +249,7 @@ function BarcodeSheet({ open, onClose, mealId: initialMeal }) {
   }
 
   return (
-    <Sheet open={open} onClose={close} title="Código de barras" full>
+    <Sheet open={open} onClose={close} title={t('Código de barras')} full>
       {stage === 'scan' && (
         <div className="space-y-3">
           <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-slate-900">
@@ -255,54 +260,54 @@ function BarcodeSheet({ open, onClose, mealId: initialMeal }) {
             </div>
           </div>
           {liveOk && (live
-            ? <button className="btn-ghost w-full" onClick={stopLive}>Parar câmera</button>
-            : <button className="btn-primary w-full !py-3.5" onClick={startCam}><Camera size={16} /> Escanear ao vivo</button>)}
-          <label className={`${liveOk ? 'btn-soft' : 'btn-primary !py-3.5'} w-full cursor-pointer`}><Camera size={16} /> Tirar foto do código
-            <input id="barcode-photo" type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => { fromPhoto(e.target.files?.[0]); e.target.value = '' }} />
+            ? <button className="btn-ghost w-full" onClick={stopLive}>{t('Parar câmera')}</button>
+            : <button className="btn-primary w-full !py-3.5" onClick={startCam}><Camera size={16} /> {t('Escanear ao vivo')}</button>)}
+          <label className={`${liveOk ? 'btn-soft' : 'btn-primary !py-3.5'} w-full cursor-pointer`}><Camera size={16} /> {t('Tirar foto do código')}<input id="barcode-photo" type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => { fromPhoto(e.target.files?.[0]); e.target.value = '' }} />
           </label>
-          {!liveOk && <p className="text-center text-[11.5px] muted">A câmera do celular abre: fotografe o código de perto e confirme a foto.</p>}
+          {!liveOk && <p className="text-center text-[11.5px] muted">{t('A câmera do celular abre: fotografe o código de perto e confirme a foto.')}</p>}
           <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); lookup(typed.trim()) }}>
             <div className="relative flex-1">
               <Keyboard size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input id="barcode-typed" className="input pl-10 tnum" inputMode="numeric" placeholder="Ou digite os números" value={typed} onChange={(e) => setTyped(e.target.value.replace(/\D/g, ''))} />
+              <input id="barcode-typed" className="input pl-10 tnum" inputMode="numeric" placeholder={t('Ou digite os números')} value={typed} onChange={(e) => setTyped(e.target.value.replace(/\D/g, ''))} />
             </div>
-            <button className="btn-ghost" disabled={typed.length < 8}>Buscar</button>
+            <button className="btn-ghost" disabled={typed.length < 8}>{t('Buscar')}</button>
           </form>
           {msg && <p className="rounded-2xl bg-slate-100 p-3 text-sm dark:bg-white/5">{msg}</p>}
         </div>
       )}
-      {stage === 'looking' && <div className="py-16 text-center"><Loader2 className="mx-auto animate-spin text-emerald-500" size={32} /><p className="mt-3 text-sm muted">Procurando o produto {code}…</p></div>}
-      {stage === 'label' && <div className="py-16 text-center"><Loader2 className="mx-auto animate-spin text-violet-500" size={32} /><p className="mt-3 text-sm muted">A IA está lendo a tabela nutricional…</p></div>}
+      {stage === 'looking' && <div className="py-16 text-center"><Loader2 className="mx-auto animate-spin text-emerald-500" size={32} /><p className="mt-3 text-sm muted">{t('Procurando o produto')} {code}…</p></div>}
+      {stage === 'label' && <div className="py-16 text-center"><Loader2 className="mx-auto animate-spin text-violet-500" size={32} /><p className="mt-3 text-sm muted">{t('A IA está lendo a tabela nutricional…')}</p></div>}
       {stage === 'found' && food && (
         <>
           <div className="mb-3"><MealSelect id="barcode-meal" value={mealId} onChange={setMealId} /></div>
-          <PortionEditor food={food} backLabel="Escanear outro" onBack={reset} onAdd={(it) => { addFoods(mealId, [it], `${it.name} adicionado`); close() }} />
+          <PortionEditor food={food} backLabel="Escanear outro" onBack={reset} onAdd={(it) => { addFoods(mealId, [it], t('{x} adicionado', { x: it.name })); close() }} />
         </>
       )}
       {stage === 'notfound' && (
         <div className="space-y-3">
           <div className="rounded-2xl bg-slate-100 p-4 dark:bg-white/5">
-            <p className="font-bold">Código {code} lido, mas o produto não está na base</p>
-            <p className="mt-1 text-sm muted">Tire uma foto da tabela nutricional da embalagem que a IA preenche tudo. Você só cadastra uma vez: nas próximas leituras, ele aparece na hora.</p>
+            <p className="font-bold">{t('Código')} {code} {t('lido, mas o produto não está na base')}</p>
+            <p className="mt-1 text-sm muted">{t(
+              'Tire uma foto da tabela nutricional da embalagem que a IA preenche tudo. Você só cadastra uma vez: nas próximas leituras, ele aparece na hora.'
+            )}</p>
           </div>
           {ai?.images && (
-            <label className="btn w-full cursor-pointer bg-violet-600 !py-3.5 text-white"><Sparkles size={16} /> Fotografar a tabela nutricional (IA)
-              <input id="label-photo" type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => fromLabel(e.target.files?.[0])} />
+            <label className="btn w-full cursor-pointer bg-violet-600 !py-3.5 text-white"><Sparkles size={16} /> {t('Fotografar a tabela nutricional (IA)')}<input id="label-photo" type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => fromLabel(e.target.files?.[0])} />
             </label>
           )}
-          <button className="btn-ghost w-full" onClick={() => setStage('manual')}><Keyboard size={16} /> Digitar os valores do rótulo</button>
-          <button className="w-full py-2 text-sm font-semibold muted" onClick={reset}>Escanear outro código</button>
+          <button className="btn-ghost w-full" onClick={() => setStage('manual')}><Keyboard size={16} /> {t('Digitar os valores do rótulo')}</button>
+          <button className="w-full py-2 text-sm font-semibold muted" onClick={reset}>{t('Escanear outro código')}</button>
           {msg && <p className="rounded-2xl bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-400/10 dark:text-rose-300">{msg}</p>}
         </div>
       )}
       {stage === 'manual' && (
         <>
-          {labelDraft && <p className="mb-3 flex items-center gap-2 rounded-2xl bg-violet-50 p-3 text-[13px] text-violet-800 dark:bg-violet-400/10 dark:text-violet-200"><Sparkles size={15} /> Valores lidos pela IA. Confira antes de salvar.</p>}
+          {labelDraft && <p className="mb-3 flex items-center gap-2 rounded-2xl bg-violet-50 p-3 text-[13px] text-violet-800 dark:bg-violet-400/10 dark:text-violet-200"><Sparkles size={15} /> {t('Valores lidos pela IA. Confira antes de salvar.')}</p>}
           <ManualFood initial={labelDraft} submitLabel="Salvar produto" onSave={(f) => { setFood(addCustomFood({ ...f, extra: labelDraft?.extra, barcode: code })); setStage('found') }} />
         </>
       )}
     </Sheet>
-  )
+  );
 }
 
 // ------------------------------------------------------------------ Chat com a IA
@@ -350,7 +355,7 @@ function ChatSheet({ open, onClose, mealId: initialMeal }) {
       const turns = history.slice(-12).map((m) => ({ role: m.role, content: m.role === 'assistant' ? JSON.stringify({ reply: m.content, foods: (m.foods || []).map((f) => f.name) }) : m.content }))
       const r = await chat(turns, context, { signal: ctl.current.signal })
       const meal = day.meals.some((m) => m.id === r.meal) ? r.meal : initialMeal || guessMeal(day.meals)
-      setMsgs((x) => [...x, { role: 'assistant', content: r.reply || 'Pronto!', foods: r.foods, meal }])
+      setMsgs((x) => [...x, { role: 'assistant', content: r.reply || t('Pronto!'), foods: r.foods, meal }])
     } catch (e) {
       if (e?.code !== 'cancelled') setMsgs((x) => [...x, { role: 'assistant', content: aiErrorText(e), error: true }])
     } finally { setBusy(false) }
@@ -358,20 +363,20 @@ function ChatSheet({ open, onClose, mealId: initialMeal }) {
   const updateMsg = (i, patch) => setMsgs((x) => x.map((m, j) => (j === i ? { ...m, ...patch } : m)))
 
   return (
-    <Sheet open={open} onClose={() => { ctl.current?.abort(); if (listening) dict?.stop(); onClose() }} title="Nutri IA" full
+    <Sheet open={open} onClose={() => { ctl.current?.abort(); if (listening) dict?.stop(); onClose() }} title={t('Nutri IA')} full
       footer={ai && (
         <form onSubmit={(e) => { e.preventDefault(); send() }} className="flex items-end gap-2">
           {dict && (
-            <button type="button" aria-label={listening ? 'Parar de ouvir' : 'Falar'} aria-pressed={listening}
-              onClick={() => (listening ? dict.stop() : dict.start({ language: 'pt-BR' }).catch(() => {}))}
+            <button type="button" aria-label={listening ? t('Parar de ouvir') : t('Falar')} aria-pressed={listening}
+              onClick={() => (listening ? dict.stop() : dict.start({ language: locale() }).catch(() => {}))}
               className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition ${listening ? 'animate-pulse bg-rose-500 text-white' : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300'}`}><Mic size={20} /></button>
           )}
-          <textarea ref={inputRef} id="chat-input" rows={1} className="input max-h-28 min-h-[48px] resize-none !py-3" placeholder={listening ? 'Ouvindo…' : 'O que você comeu?'}
+          <textarea ref={inputRef} id="chat-input" rows={1} className="input max-h-28 min-h-[48px] resize-none !py-3" placeholder={listening ? t('Ouvindo…') : t('O que você comeu?')}
             value={text + (partial ? (text ? ' ' : '') + partial : '')} onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} />
           {busy
-            ? <button type="button" onClick={() => ctl.current?.abort()} aria-label="Parar" className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900"><Square size={16} /></button>
-            : <button aria-label="Enviar" disabled={!text.trim()} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-violet-600 text-white disabled:opacity-40"><Send size={18} /></button>}
+            ? <button type="button" onClick={() => ctl.current?.abort()} aria-label={t('Parar')} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900"><Square size={16} /></button>
+            : <button aria-label={t('Enviar')} disabled={!text.trim()} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-violet-600 text-white disabled:opacity-40"><Send size={18} /></button>}
         </form>
       )}>
       {loading ? <Loader2 className="mx-auto my-10 animate-spin text-violet-500" /> : !ai ? <AIUnavailable /> : (
@@ -380,11 +385,13 @@ function ChatSheet({ open, onClose, mealId: initialMeal }) {
             <div className="animate-fade-in">
               <div className="flex items-start gap-3 rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-600 p-4 text-white">
                 <Bot size={26} className="shrink-0" />
-                <p className="text-[14px]">Oi! Sou a Nutri. Me conte o que você comeu, por texto ou voz, que eu calculo e registro. Também respondo dúvidas e sugiro refeições para bater suas metas.</p>
+                <p className="text-[14px]">{t(
+                  'Oi! Sou a Nutri. Me conte o que você comeu, por texto ou voz, que eu calculo e registro. Também respondo dúvidas e sugiro refeições para bater suas metas.'
+                )}</p>
               </div>
-              <p className="label mb-2 mt-4">Experimente</p>
+              <p className="label mb-2 mt-4">{t('Experimente')}</p>
               <div className="flex flex-col gap-2">
-                {SUGGESTIONS.map((s) => <button key={s} onClick={() => send(s)} className="rounded-2xl bg-white px-4 py-3 text-left text-[14px] font-medium active:scale-[0.99] dark:bg-white/5">{s}</button>)}
+                {SUGGESTIONS.map((s) => <button key={s} onClick={() => send(t(s))} className="rounded-2xl bg-white px-4 py-3 text-left text-[14px] font-medium active:scale-[0.99] dark:bg-white/5">{t(s)}</button>)}
               </div>
             </div>
           )}
@@ -399,13 +406,13 @@ function ChatSheet({ open, onClose, mealId: initialMeal }) {
                     {m.foods?.length > 0 && (
                       <div className="rounded-3xl border border-violet-200 bg-violet-50/60 p-3 dark:border-violet-400/20 dark:bg-violet-400/5">
                         {m.added ? (
-                          <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300"><Check size={16} /> Adicionado ao diário</p>
+                          <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300"><Check size={16} /> {t('Adicionado ao diário')}</p>
                         ) : (
                           <>
                             <FoodReview foods={m.foods} setFoods={(f) => updateMsg(i, { foods: f })} />
                             <div className="mt-2 flex gap-2">
                               <div className="w-[48%]"><MealSelect id={`chat-meal-${i}`} value={m.meal} onChange={(v) => updateMsg(i, { meal: v })} /></div>
-                              <button className="btn-primary flex-1 !px-2" onClick={() => { addFoods(m.meal, stripBase(m.foods), 'Registrado pela Nutri IA'); updateMsg(i, { added: true }) }}>
+                              <button className="btn-primary flex-1 !px-2" onClick={() => { addFoods(m.meal, stripBase(m.foods), t('Registrado pela Nutri IA')); updateMsg(i, { added: true }) }}>
                                 <Plus size={16} /> {fmt(sumNutrients(m.foods).kcal)} kcal
                               </button>
                             </div>
@@ -418,12 +425,12 @@ function ChatSheet({ open, onClose, mealId: initialMeal }) {
               </div>
             </div>
           ))}
-          {busy && <div className="flex items-center gap-2 text-sm muted"><Loader2 size={16} className="animate-spin" /> Nutri está pensando…</div>}
+          {busy && <div className="flex items-center gap-2 text-sm muted"><Loader2 size={16} className="animate-spin" /> {t('Nutri está pensando…')}</div>}
           <div ref={end} />
         </div>
       )}
     </Sheet>
-  )
+  );
 }
 
 // ------------------------------------------------------------------ Provider + botão "+"
@@ -455,21 +462,21 @@ export function QuickAddButton() {
   ]
   return (
     <>
-      <button onClick={() => setMenu(true)} aria-label="Registrar alimento"
+      <button onClick={() => setMenu(true)} aria-label={t('Registrar alimento')}
         className="fixed z-40 grid h-14 w-14 place-items-center rounded-full bg-emerald-600 text-white shadow-xl shadow-emerald-600/40 transition active:scale-90 dark:bg-emerald-500 dark:text-emerald-950"
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)', right: 'max(18px, calc(50vw - 222px), env(safe-area-inset-right, 0px))' }}>
         <Plus size={28} strokeWidth={2.6} />
       </button>
-      <Sheet open={menu} onClose={() => setMenu(false)} title="Registrar">
+      <Sheet open={menu} onClose={() => setMenu(false)} title={t('Registrar')}>
         <div className="space-y-2">
           {items.map(([m, I, l, d, g]) => (
             <button key={m} onClick={() => { setMenu(false); open(m) }} className="flex w-full items-center gap-3 rounded-2xl bg-white p-3 text-left active:scale-[0.99] dark:bg-white/5">
               <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${g} text-white`}><I size={22} /></span>
-              <span><b className="block text-[15px]">{l}</b><span className="text-xs muted">{d}</span></span>
+              <span><b className="block text-[15px]">{t(l)}</b><span className="text-xs muted">{t(d)}</span></span>
             </button>
           ))}
         </div>
       </Sheet>
     </>
-  )
+  );
 }

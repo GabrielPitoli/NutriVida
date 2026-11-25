@@ -11,6 +11,9 @@ import { recipeFromIdea, coverDataUrl, aiErrorText } from '../lib/ai'
 import { computeGrade } from '../lib/quality'
 import { QualityFace, QualityBadge, QualityReasons } from '../components/Quality'
 
+import { plural, t } from '../i18n'
+import { foodName, localRecipe } from '../i18n/content';
+
 const gradeRecipe = (r) => (r.q ? { grade: r.q, reasons: [] } : computeGrade(r.nutrition))
 
 const CAT_ICON = { cafe: Coffee, almoco: UtensilsCrossed, lanche: Cookie, jantar: Moon, treino: Zap }
@@ -42,22 +45,22 @@ function RecipeDetail({ recipe, onClose, onEdit }) {
   const n = recipe.nutrition
   const scaled = Object.fromEntries(Object.entries(n).map(([k, v]) => [k, k === 'kcal' ? Math.round(v * servings) : Math.round(v * servings * 10) / 10]))
   const log = () => {
-    addFoods(mealId, [{ name: recipe.name, recipeId: recipe.id, q: gradeRecipe(recipe).grade, portion: `${fmt(servings, 1)} porç${servings > 1 ? 'ões' : 'ão'}`, ...scaled }], 'Receita registrada no diário')
+    addFoods(mealId, [{ name: recipe.name, recipeId: recipe.id, q: gradeRecipe(recipe).grade, portion: plural(servings, '{n} porção', '{n} porções', { n: fmt(servings, 1) }), ...scaled }], t('Receita registrada no diário'))
     setLogged(true)
     setTimeout(onClose, 700)
   }
   return (
-    <Sheet open onClose={onClose} title={recipe.mine ? 'Minha receita' : 'Receita'} full
+    <Sheet open onClose={onClose} title={recipe.mine ? t('Minha receita') : t('Receita')} full
       footer={
         <div className="space-y-2">
           <div className="flex gap-2">
-            <select id="recipe-meal" aria-label="Refeição" className="input !py-2.5 flex-1" value={mealId} onChange={(e) => setMealId(e.target.value)}>
-              {day.meals.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            <select id="recipe-meal" aria-label={t('Refeição')} className="input !py-2.5 flex-1" value={mealId} onChange={(e) => setMealId(e.target.value)}>
+              {day.meals.map((m) => <option key={m.id} value={m.id}>{t(m.name)}</option>)}
             </select>
             <div className="w-40"><Stepper id="recipe-serv" value={servings} onChange={setServings} step={0.5} min={0.5} max={10} /></div>
           </div>
           <button onClick={log} disabled={logged} className="btn-primary w-full !py-3.5">
-            {logged ? <><Check size={18} /> Registrado!</> : <>Registrar no meu dia · {fmt(scaled.kcal)} kcal</>}
+            {logged ? <><Check size={18} /> {t('Registrado!')}</> : <>{t('Registrar no meu dia ·')} {fmt(scaled.kcal)} kcal</>}
           </button>
         </div>
       }>
@@ -65,33 +68,33 @@ function RecipeDetail({ recipe, onClose, onEdit }) {
       <div className="flex items-start gap-3">
         {!recipe.image && <RecipeIcon r={recipe} size={48} />}
         <div className="min-w-0">
-          <p className="label">{RECIPE_CATEGORIES.find((c) => c.id === recipe.category)?.label}</p>
+          <p className="label">{t(RECIPE_CATEGORIES.find((c) => c.id === recipe.category)?.label)}</p>
           <h3 className="font-display text-[24px] font-extrabold leading-tight tracking-tight">{recipe.name}</h3>
         </div>
       </div>
       <div className="mt-2 flex flex-wrap gap-3 text-sm muted">
         <span className="inline-flex items-center gap-1"><Clock size={15} /> {recipe.time} min</span>
-        <span className="inline-flex items-center gap-1"><Users size={15} /> Rende {recipe.servings} porç{recipe.servings > 1 ? 'ões' : 'ão'}</span>
+        <span className="inline-flex items-center gap-1"><Users size={15} /> {plural(recipe.servings, 'Rende {n} porção', 'Rende {n} porções')}</span>
       </div>
       <div className="mt-3"><QualityBadge grade={gradeRecipe(recipe).grade} /></div>
       <QualityReasons reasons={gradeRecipe(recipe).reasons} />
       {recipe.tags?.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {recipe.tags.map((t) => <span key={t} className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">{RECIPE_TAGS.find((x) => x.id === t)?.label}</span>)}
+          {recipe.tags.map((tg) => <span key={tg} className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">{t(RECIPE_TAGS.find((x) => x.id === tg)?.label)}</span>)}
         </div>
       )}
       {recipe.mine && (
         <div className="mt-3 flex gap-2">
-          <button className="btn-soft flex-1 !py-2" onClick={() => onEdit(recipe)}><Pencil size={15} /> Editar</button>
-          <button className="btn-danger flex-1 !py-2" onClick={() => setConfirmDel(true)}><Trash2 size={15} /> Excluir</button>
+          <button className="btn-soft flex-1 !py-2" onClick={() => onEdit(recipe)}><Pencil size={15} /> {t('Editar')}</button>
+          <button className="btn-danger flex-1 !py-2" onClick={() => setConfirmDel(true)}><Trash2 size={15} /> {t('Excluir')}</button>
         </div>
       )}
 
-      <p className="label mb-2 mt-5">Tabela nutricional · por porção</p>
+      <p className="label mb-2 mt-5">{t('Tabela nutricional · por porção')}</p>
       <NutrientGrid n={n} />
 
       {recipe.ingredients?.length > 0 && <>
-        <p className="label mb-2 mt-6">Ingredientes</p>
+        <p className="label mb-2 mt-6">{t('Ingredientes')}</p>
         <ul className="space-y-1">
           {recipe.ingredients.map((ing, i) => (
             <li key={i}>
@@ -105,7 +108,7 @@ function RecipeDetail({ recipe, onClose, onEdit }) {
       </>}
 
       {recipe.steps?.length > 0 && <>
-        <p className="label mb-3 mt-6 flex items-center gap-1.5"><ListChecks size={14} /> Modo de preparo</p>
+        <p className="label mb-3 mt-6 flex items-center gap-1.5"><ListChecks size={14} /> {t('Modo de preparo')}</p>
         <ol className="space-y-3">
           {recipe.steps.map((s, i) => (
             <li key={i} className="flex gap-3">
@@ -116,15 +119,17 @@ function RecipeDetail({ recipe, onClose, onEdit }) {
         </ol>
       </>}
 
-      <Sheet open={confirmDel} onClose={() => setConfirmDel(false)} title="Excluir receita?">
-        <p className="text-sm muted">"{recipe.name}" será apagada de Minhas receitas. O que você já registrou no diário continua lá.</p>
+      <Sheet open={confirmDel} onClose={() => setConfirmDel(false)} title={t('Excluir receita?')}>
+        <p className="text-sm muted">"{recipe.name}{t(
+          '" será apagada de Minhas receitas. O que você já registrou no diário continua lá.'
+        )}</p>
         <div className="mt-4 space-y-2">
-          <button className="btn w-full bg-rose-600 !py-3.5 text-white" onClick={() => { deleteMyRecipe(recipe.id); setConfirmDel(false); onClose() }}><Trash2 size={16} /> Excluir</button>
-          <button className="btn-ghost w-full !py-3.5" onClick={() => setConfirmDel(false)}>Cancelar</button>
+          <button className="btn w-full bg-rose-600 !py-3.5 text-white" onClick={() => { deleteMyRecipe(recipe.id); setConfirmDel(false); onClose() }}><Trash2 size={16} /> {t('Excluir')}</button>
+          <button className="btn-ghost w-full !py-3.5" onClick={() => setConfirmDel(false)}>{t('Cancelar')}</button>
         </div>
       </Sheet>
     </Sheet>
-  )
+  );
 }
 
 // ------------------------------------------------------------------ editor de receitas próprias
@@ -143,24 +148,24 @@ function IngredientPicker({ onAdd }) {
     return (
       <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 p-2 dark:bg-emerald-400/10">
         <span className="min-w-0 flex-1 truncate pl-2 text-sm font-semibold">{sel.name}</span>
-        <input aria-label="Gramas" inputMode="numeric" className="input w-20 !px-2 !py-2 text-right tnum" value={g} onChange={(e) => setG(parseInt(e.target.value.replace(/\D/g, ''), 10) || 0)} />
+        <input aria-label={t('Gramas')} inputMode="numeric" className="input w-20 !px-2 !py-2 text-right tnum" value={g} onChange={(e) => setG(parseInt(e.target.value.replace(/\D/g, ''), 10) || 0)} />
         <span className="text-xs muted">g</span>
-        <button className="btn-primary !px-3 !py-2" disabled={!g} onClick={() => { onAdd({ text: `${g} g de ${sel.name.toLowerCase()}`, n: nutrientsFor(sel.per100, g) }); setSel(null); setQ(''); setG(100) }}><Check size={16} /></button>
-        <button className="p-1 text-slate-400" aria-label="Cancelar" onClick={() => setSel(null)}><X size={16} /></button>
+        <button className="btn-primary !px-3 !py-2" disabled={!g} onClick={() => { onAdd({ text: t('{g} g de {x}', { g, x: foodName(sel).toLowerCase() }), n: nutrientsFor(sel.per100, g) }); setSel(null); setQ(''); setG(100) }}><Check size={16} /></button>
+        <button className="p-1 text-slate-400" aria-label={t('Cancelar')} onClick={() => setSel(null)}><X size={16} /></button>
       </div>
-    )
+    );
   }
   return (
     <div className="relative">
       <Calculator size={16} className="absolute left-3.5 top-3.5 text-emerald-500" />
-      <input id="ing-search" className="input pl-10" placeholder="Buscar no banco de alimentos (calcula sozinho)" value={q} onChange={(e) => setQ(e.target.value)} />
+      <input id="ing-search" className="input pl-10" placeholder={t('Buscar no banco de alimentos (calcula sozinho)')} value={q} onChange={(e) => setQ(e.target.value)} />
       {list.length > 0 && (
         <ul className="mt-1 overflow-hidden rounded-2xl bg-white shadow-card dark:bg-[#1a2b25]">
-          {list.map((f) => <li key={f.id}><button className="w-full px-4 py-2.5 text-left text-sm active:bg-slate-50 dark:active:bg-white/5" onClick={() => { setSel(f); setG(f.unit?.grams || 100) }}>{f.name} <span className="text-xs muted">· {fmt(f.per100.kcal)} kcal/100 g</span></button></li>)}
+          {list.map((f) => <li key={f.id}><button className="w-full px-4 py-2.5 text-left text-sm active:bg-slate-50 dark:active:bg-white/5" onClick={() => { setSel(f); setG(f.unit?.grams || 100) }}>{f.name} <span className="text-xs muted">· {fmt(f.per100.kcal)} {t('kcal/100 g')}</span></button></li>)}
         </ul>
       )}
     </div>
-  )
+  );
 }
 
 function RecipeEditor({ initial, onClose, onSaved }) {
@@ -198,99 +203,98 @@ function RecipeEditor({ initial, onClose, onSaved }) {
   const valid = r.name.trim() && nutrition.kcal >= 0
 
   return (
-    <Sheet open onClose={onClose} title={initial ? 'Editar receita' : 'Nova receita'} full
-      footer={<button className="btn-primary w-full !py-3.5" disabled={!valid} onClick={save}><Check size={18} /> Salvar receita</button>}>
+    <Sheet open onClose={onClose} title={initial ? t('Editar receita') : t('Nova receita')} full
+      footer={<button className="btn-primary w-full !py-3.5" disabled={!valid} onClick={save}><Check size={18} /> {t('Salvar receita')}</button>}>
       <div className="space-y-5">
         {!initial && ai && (
           <div className="rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-600 p-4 text-white">
-            <p className="flex items-center gap-2 font-display font-bold"><Sparkles size={18} /> Tem uma ideia? A IA monta a receita</p>
+            <p className="flex items-center gap-2 font-display font-bold"><Sparkles size={18} /> {t('Tem uma ideia? A IA monta a receita')}</p>
             <textarea id="recipe-idea" rows={2} className="mt-2 w-full resize-none rounded-2xl border-0 bg-white/15 px-3 py-2 text-[14px] text-white placeholder:text-white/70 outline-none focus:bg-white/25"
-              placeholder="Ex.: bolo de caneca de banana sem açúcar e com whey" value={idea} onChange={(e) => setIdea(e.target.value)} />
+              placeholder={t('Ex.: bolo de caneca de banana sem açúcar e com whey')} value={idea} onChange={(e) => setIdea(e.target.value)} />
             <button disabled={!idea.trim() || aiState === 'working'} onClick={generate} className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-2.5 text-sm font-bold text-violet-700 disabled:opacity-60">
-              {aiState === 'working' ? <><Loader2 size={16} className="animate-spin" /> Criando receita…</> : <><Lightbulb size={16} /> Criar com IA</>}
+              {aiState === 'working' ? <><Loader2 size={16} className="animate-spin" /> {t('Criando receita…')}</> : <><Lightbulb size={16} /> {t('Criar com IA')}</>}
             </button>
-            {aiState === 'done' && <p className="mt-2 text-[12px] text-white/90">Pronto! Revise e ajuste abaixo antes de salvar.</p>}
+            {aiState === 'done' && <p className="mt-2 text-[12px] text-white/90">{t('Pronto! Revise e ajuste abaixo antes de salvar.')}</p>}
             {aiState && !['working', 'done'].includes(aiState) && <p className="mt-2 text-[12px] text-white">{aiState}</p>}
           </div>
         )}
 
         <label className="relative block cursor-pointer overflow-hidden rounded-3xl">
-          {r.image ? <img src={r.image} alt="Foto da receita" className="aspect-[16/10] w-full object-cover" /> : (
+          {r.image ? <img src={r.image} alt={t('Foto da receita')} className="aspect-[16/10] w-full object-cover" /> : (
             <div className="grid aspect-[16/10] place-items-center border-2 border-dashed border-slate-300 bg-white text-slate-500 dark:border-white/15 dark:bg-white/5">
-              <span className="flex flex-col items-center gap-1 text-sm font-semibold">{photoBusy ? <Loader2 className="animate-spin" /> : <ImagePlus size={28} />} Adicionar foto</span>
+              <span className="flex flex-col items-center gap-1 text-sm font-semibold">{photoBusy ? <Loader2 className="animate-spin" /> : <ImagePlus size={28} />} {t('Adicionar foto')}</span>
             </div>
           )}
-          {r.image && <span className="absolute bottom-3 right-3 rounded-full bg-black/55 px-3 py-1.5 text-xs font-bold text-white">Trocar foto</span>}
+          {r.image && <span className="absolute bottom-3 right-3 rounded-full bg-black/55 px-3 py-1.5 text-xs font-bold text-white">{t('Trocar foto')}</span>}
           <input id="recipe-photo" type="file" accept="image/*" className="sr-only" onChange={(e) => pickPhoto(e.target.files?.[0])} />
         </label>
 
-        <Field label="Nome da receita" htmlFor="recipe-name"><input id="recipe-name" className="input" placeholder="Ex.: Panqueca da vovó versão fit" value={r.name} onChange={(e) => set({ name: e.target.value })} /></Field>
+        <Field label={t('Nome da receita')} htmlFor="recipe-name"><input id="recipe-name" className="input" placeholder={t('Ex.: Panqueca da vovó versão fit')} value={r.name} onChange={(e) => set({ name: e.target.value })} /></Field>
 
         <div>
-          <span className="mb-1.5 block text-[13px] font-semibold text-slate-600 dark:text-slate-300">Tipo de refeição</span>
-          <div className="flex flex-wrap gap-2">{RECIPE_CATEGORIES.map((c) => <button key={c.id} className={`chip ${r.category === c.id ? 'chip-on' : ''}`} onClick={() => set({ category: c.id })}>{c.label}</button>)}</div>
+          <span className="mb-1.5 block text-[13px] font-semibold text-slate-600 dark:text-slate-300">{t('Tipo de refeição')}</span>
+          <div className="flex flex-wrap gap-2">{RECIPE_CATEGORIES.map((c) => <button key={c.id} className={`chip ${r.category === c.id ? 'chip-on' : ''}`} onClick={() => set({ category: c.id })}>{t(c.label)}</button>)}</div>
         </div>
         <div>
-          <span className="mb-1.5 block text-[13px] font-semibold text-slate-600 dark:text-slate-300">Características</span>
-          <div className="flex flex-wrap gap-2">{RECIPE_TAGS.map((t) => { const on = r.tags.includes(t.id); return <button key={t.id} aria-pressed={on} className={`chip ${on ? 'chip-on' : ''}`} onClick={() => set({ tags: on ? r.tags.filter((x) => x !== t.id) : [...r.tags, t.id] })}>{t.label}</button> })}</div>
+          <span className="mb-1.5 block text-[13px] font-semibold text-slate-600 dark:text-slate-300">{t('Características')}</span>
+          <div className="flex flex-wrap gap-2">{RECIPE_TAGS.map((tg) => { const on = r.tags.includes(tg.id); return <button key={tg.id} aria-pressed={on} className={`chip ${on ? 'chip-on' : ''}`} onClick={() => set({ tags: on ? r.tags.filter((x) => x !== tg.id) : [...r.tags, tg.id] })}>{t(tg.label)}</button> })}</div>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Tempo (min)" htmlFor="recipe-time"><Stepper id="recipe-time" value={r.time} onChange={(v) => set({ time: v })} step={5} min={1} max={600} /></Field>
-          <Field label="Rende (porções)" htmlFor="recipe-servings"><Stepper id="recipe-servings" value={r.servings} onChange={(v) => set({ servings: Math.max(1, Math.round(v)) })} min={1} max={50} /></Field>
+          <Field label={t('Tempo (min)')} htmlFor="recipe-time"><Stepper id="recipe-time" value={r.time} onChange={(v) => set({ time: v })} step={5} min={1} max={600} /></Field>
+          <Field label={t('Rende (porções)')} htmlFor="recipe-servings"><Stepper id="recipe-servings" value={r.servings} onChange={(v) => set({ servings: Math.max(1, Math.round(v)) })} min={1} max={50} /></Field>
         </div>
 
         <div>
-          <p className="label mb-2">Ingredientes</p>
+          <p className="label mb-2">{t('Ingredientes')}</p>
           <ul className="mb-2 space-y-1.5">
             {r.ingredients.map((ing, i) => (
               <li key={i} className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2 dark:bg-white/5">
                 <span className="min-w-0 flex-1 text-[14px]">{ingText(ing)}{ing.n && <span className="ml-1 text-[11px] font-semibold text-emerald-600 tnum">· {fmt(ing.n.kcal)} kcal</span>}</span>
-                <button aria-label="Remover ingrediente" className="p-1 text-slate-400" onClick={() => set({ ingredients: r.ingredients.filter((_, j) => j !== i) })}><X size={16} /></button>
+                <button aria-label={t('Remover ingrediente')} className="p-1 text-slate-400" onClick={() => set({ ingredients: r.ingredients.filter((_, j) => j !== i) })}><X size={16} /></button>
               </li>
             ))}
           </ul>
           <IngredientPicker onAdd={(ing) => set({ ingredients: [...r.ingredients, ing] })} />
           <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (freeIng.trim()) { set({ ingredients: [...r.ingredients, { text: freeIng.trim() }] }); setFreeIng('') } }}>
-            <input id="ing-free" className="input" placeholder="Ou escreva livre: sal, temperos…" value={freeIng} onChange={(e) => setFreeIng(e.target.value)} />
-            <button className="btn-ghost !px-3" aria-label="Adicionar ingrediente"><Plus size={18} /></button>
+            <input id="ing-free" className="input" placeholder={t('Ou escreva livre: sal, temperos…')} value={freeIng} onChange={(e) => setFreeIng(e.target.value)} />
+            <button className="btn-ghost !px-3" aria-label={t('Adicionar ingrediente')}><Plus size={18} /></button>
           </form>
         </div>
 
         <div>
-          <p className="label mb-2">Modo de preparo</p>
+          <p className="label mb-2">{t('Modo de preparo')}</p>
           <ol className="mb-2 space-y-1.5">
             {r.steps.map((s, i) => (
               <li key={i} className="flex items-start gap-2 rounded-2xl bg-white px-3 py-2 dark:bg-white/5">
                 <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-900 text-[11px] font-bold text-white dark:bg-white dark:text-slate-900">{i + 1}</span>
                 <span className="min-w-0 flex-1 text-[14px]">{s}</span>
-                <button aria-label="Remover passo" className="p-1 text-slate-400" onClick={() => set({ steps: r.steps.filter((_, j) => j !== i) })}><X size={16} /></button>
+                <button aria-label={t('Remover passo')} className="p-1 text-slate-400" onClick={() => set({ steps: r.steps.filter((_, j) => j !== i) })}><X size={16} /></button>
               </li>
             ))}
           </ol>
           <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (freeStep.trim()) { set({ steps: [...r.steps, freeStep.trim()] }); setFreeStep('') } }}>
-            <input id="step-free" className="input" placeholder={`Passo ${r.steps.length + 1}`} value={freeStep} onChange={(e) => setFreeStep(e.target.value)} />
-            <button className="btn-ghost !px-3" aria-label="Adicionar passo"><Plus size={18} /></button>
+            <input id="step-free" className="input" placeholder={t('Passo {n}', { n: r.steps.length + 1 })} value={freeStep} onChange={(e) => setFreeStep(e.target.value)} />
+            <button className="btn-ghost !px-3" aria-label={t('Adicionar passo')}><Plus size={18} /></button>
           </form>
         </div>
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <p className="label">Nutrição por porção</p>
+            <p className="label">{t('Nutrição por porção')}</p>
             {linked.length > 0 && (
               <label className="flex items-center gap-2 text-[12px] font-semibold">
-                <input id="auto-nutri" type="checkbox" className="h-4 w-4 accent-emerald-600" checked={r.autoNutrition} onChange={(e) => set({ autoNutrition: e.target.checked, nutrition: autoN })} /> Calcular pelos ingredientes
-              </label>
+                <input id="auto-nutri" type="checkbox" className="h-4 w-4 accent-emerald-600" checked={r.autoNutrition} onChange={(e) => set({ autoNutrition: e.target.checked, nutrition: autoN })} /> {t('Calcular pelos ingredientes')}</label>
             )}
           </div>
           {auto ? (
-            <><NutrientGrid n={autoN} /><p className="mt-1.5 text-[11px] muted">Soma dos ingredientes do banco ÷ {r.servings} porç{r.servings > 1 ? 'ões' : 'ão'}.</p></>
+            <><NutrientGrid n={autoN} /><p className="mt-1.5 text-[11px] muted">{plural(r.servings, 'Soma dos ingredientes do banco ÷ {n} porção.', 'Soma dos ingredientes do banco ÷ {n} porções.')}</p></>
           ) : (
             <div className="grid grid-cols-5 gap-1.5">
               {[['kcal', 'kcal'], ['protein', 'Prot.'], ['carbs', 'Carb.'], ['fat', 'Gord.'], ['fiber', 'Fibras']].map(([k, l]) => (
                 <label key={k} className="text-center">
                   <input id={'rn-' + k} inputMode="decimal" className="input !px-1 !py-2 text-center text-sm font-bold tnum" value={r.nutrition[k]}
                     onChange={(e) => set({ nutrition: { ...r.nutrition, [k]: parseFloat(e.target.value.replace(',', '.')) || 0 } })} />
-                  <span className="mt-0.5 block text-[10px] font-semibold uppercase muted">{l}</span>
+                  <span className="mt-0.5 block text-[10px] font-semibold uppercase muted">{t(l)}</span>
                 </label>
               ))}
             </div>
@@ -298,7 +302,7 @@ function RecipeEditor({ initial, onClose, onSaved }) {
         </div>
       </div>
     </Sheet>
-  )
+  );
 }
 
 // ------------------------------------------------------------------ página
@@ -311,7 +315,8 @@ export default function Recipes() {
   const [open, setOpen] = useState(null)
   const [editing, setEditing] = useState(null) // null | 'new' | recipe
 
-  const source = seg === 'dicas' ? RECIPES : myRecipes
+  const tips = useMemo(() => RECIPES.map(localRecipe), [])
+  const source = seg === 'dicas' ? tips : myRecipes
   const list = useMemo(() => {
     const nq = norm(q.trim())
     return source.filter((r) => (cat === 'todas' || r.category === cat) && (!tag || r.tags?.includes(tag)) && (!nq || norm(r.name + ' ' + (r.ingredients || []).map(ingText).join(' ')).includes(nq)))
@@ -319,25 +324,25 @@ export default function Recipes() {
 
   return (
     <div>
-      <Header title="Receitas" subtitle={`${RECIPES.length} dicas · ${myRecipes.length} suas`}
-        right={<button onClick={() => setEditing('new')} className="btn-primary !rounded-full !px-3.5 !py-2"><Plus size={16} /> Nova</button>} />
+      <Header title={t('Receitas')} subtitle={t('{a} dicas · {b} suas', { a: RECIPES.length, b: myRecipes.length })}
+        right={<button onClick={() => setEditing('new')} className="btn-primary !rounded-full !px-3.5 !py-2"><Plus size={16} /> {t('Nova')}</button>} />
       <div className="seg mb-3">
-        <button aria-pressed={seg === 'dicas'} onClick={() => setSeg('dicas')}>Dicas</button>
-        <button aria-pressed={seg === 'minhas'} onClick={() => setSeg('minhas')}><BookHeart size={14} className="mr-1 inline" />Minhas receitas</button>
+        <button aria-pressed={seg === 'dicas'} onClick={() => setSeg('dicas')}>{t('Dicas')}</button>
+        <button aria-pressed={seg === 'minhas'} onClick={() => setSeg('minhas')}><BookHeart size={14} className="mr-1 inline" />{t('Minhas receitas')}</button>
       </div>
       <div className="relative">
         <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input id="recipe-search" className="input pl-11" placeholder="Buscar receita ou ingrediente" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input id="recipe-search" className="input pl-11" placeholder={t('Buscar receita ou ingrediente')} value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       <div className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
-        <button className={`chip ${cat === 'todas' ? 'chip-on' : ''}`} onClick={() => setCat('todas')}>Todas</button>
-        {RECIPE_CATEGORIES.map((c) => <button key={c.id} className={`chip ${cat === c.id ? 'chip-on' : ''}`} onClick={() => setCat(c.id)}>{c.label}</button>)}
+        <button className={`chip ${cat === 'todas' ? 'chip-on' : ''}`} onClick={() => setCat('todas')}>{t('Todas')}</button>
+        {RECIPE_CATEGORIES.map((c) => <button key={c.id} className={`chip ${cat === c.id ? 'chip-on' : ''}`} onClick={() => setCat(c.id)}>{t(c.label)}</button>)}
       </div>
       <div className="no-scrollbar -mx-4 mt-2 flex gap-2 overflow-x-auto px-4">
-        {RECIPE_TAGS.map((t) => (
-          <button key={t.id} onClick={() => setTag(tag === t.id ? null : t.id)} aria-pressed={tag === t.id}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold transition ${tag === t.id ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-200/60 text-slate-600 dark:bg-white/5 dark:text-slate-300'}`}>
-            {t.label}
+        {RECIPE_TAGS.map((tg) => (
+          <button key={tg.id} onClick={() => setTag(tag === tg.id ? null : tg.id)} aria-pressed={tag === tg.id}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold transition ${tag === tg.id ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-200/60 text-slate-600 dark:bg-white/5 dark:text-slate-300'}`}>
+            {t(tg.label)}
           </button>
         ))}
       </div>
@@ -345,9 +350,11 @@ export default function Recipes() {
       {seg === 'minhas' && myRecipes.length === 0 ? (
         <div className="mt-6 rounded-3xl border-2 border-dashed border-slate-300 p-6 text-center dark:border-white/15">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"><Lightbulb size={26} /></span>
-          <p className="mt-3 font-display text-lg font-bold">Suas receitas ficam aqui</p>
-          <p className="mt-1 text-sm muted">Cadastre aquela receita de família, uma ideia que inventou ou peça para a IA montar uma a partir de uma ideia. As calorias são calculadas pelos ingredientes.</p>
-          <button className="btn-primary mt-4" onClick={() => setEditing('new')}><Plus size={16} /> Criar minha receita</button>
+          <p className="mt-3 font-display text-lg font-bold">{t('Suas receitas ficam aqui')}</p>
+          <p className="mt-1 text-sm muted">{t(
+            'Cadastre aquela receita de família, uma ideia que inventou ou peça para a IA montar uma a partir de uma ideia. As calorias são calculadas pelos ingredientes.'
+          )}</p>
+          <button className="btn-primary mt-4" onClick={() => setEditing('new')}><Plus size={16} /> {t('Criar minha receita')}</button>
         </div>
       ) : (
         <ul className="mt-4 space-y-2">
@@ -360,8 +367,8 @@ export default function Recipes() {
                   <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[12px] muted tnum">
                     <span className="font-semibold text-slate-700 dark:text-slate-200">{fmt(r.nutrition.kcal)} kcal</span>
                     <span className="inline-flex items-center gap-0.5"><Clock size={12} />{r.time} min</span>
-                    <span className="font-semibold text-rose-500">P {fmt(r.nutrition.protein)} g</span>
-                    {r.mine && <span className="rounded-full bg-emerald-100 px-1.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">Minha</span>}
+                    <span className="font-semibold text-rose-500">{t('P')} {fmt(r.nutrition.protein)} g</span>
+                    {r.mine && <span className="rounded-full bg-emerald-100 px-1.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">{t('Minha')}</span>}
                   </p>
                 </div>
                 <QualityFace grade={gradeRecipe(r).grade} size={24} />
@@ -370,9 +377,9 @@ export default function Recipes() {
           ))}
         </ul>
       )}
-      {list.length === 0 && !(seg === 'minhas' && myRecipes.length === 0) && <p className="py-12 text-center text-sm muted">Nenhuma receita com esses filtros.</p>}
+      {list.length === 0 && !(seg === 'minhas' && myRecipes.length === 0) && <p className="py-12 text-center text-sm muted">{t('Nenhuma receita com esses filtros.')}</p>}
       {open && <RecipeDetail recipe={open} onClose={() => setOpen(null)} onEdit={(rec) => { setOpen(null); setEditing(rec) }} />}
       {editing && <RecipeEditor initial={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={(rec) => { setEditing(null); setSeg('minhas'); setOpen(rec) }} />}
     </div>
-  )
+  );
 }

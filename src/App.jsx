@@ -43,6 +43,12 @@ function Shell() {
   )
 }
 
+// Trocar o idioma remonta a interface, e todos os textos são lidos de novo no idioma novo
+function LangRoot() {
+  const { lang } = useApp()
+  return <AddFlowProvider key={lang}><Shell /></AddFlowProvider>
+}
+
 export default function App() {
-  return <AppProvider><AddFlowProvider><Shell /></AddFlowProvider></AppProvider>
+  return <AppProvider><LangRoot /></AppProvider>
 }

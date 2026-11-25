@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 /**
  * Qualidade nutricional (1 = péssimo … 5 = excelente).
  * Ordem de prioridade: nota definida à mão (base de alimentos) → Nutri-Score do produto (Open Food Facts)
@@ -6,11 +7,11 @@
  * e tira pontos por açúcar, gordura saturada, sódio e excesso de calorias.
  */
 export const GRADES = {
-  5: { label: 'Excelente', color: '#16a34a', soft: 'bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-300' },
-  4: { label: 'Bom', color: '#65a30d', soft: 'bg-lime-100 text-lime-800 dark:bg-lime-500/15 dark:text-lime-300' },
-  3: { label: 'Normal', color: '#eab308', soft: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/15 dark:text-yellow-300' },
-  2: { label: 'Ruim', color: '#f97316', soft: 'bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300' },
-  1: { label: 'Péssimo', color: '#dc2626', soft: 'bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300' },
+  5: { get label() { return t('Excelente') }, color: '#16a34a', soft: 'bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-300' },
+  4: { get label() { return t('Bom') }, color: '#65a30d', soft: 'bg-lime-100 text-lime-800 dark:bg-lime-500/15 dark:text-lime-300' },
+  3: { get label() { return t('Normal') }, color: '#eab308', soft: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/15 dark:text-yellow-300' },
+  2: { get label() { return t('Ruim') }, color: '#f97316', soft: 'bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300' },
+  1: { get label() { return t('Péssimo') }, color: '#dc2626', soft: 'bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300' },
 }
 const NUTRISCORE = { a: 5, b: 4, c: 3, d: 2, e: 1 }
 

@@ -1,4 +1,5 @@
 import { GRADES } from '../lib/quality'
+import { t, t as tr } from '../i18n'
 
 const MOUTH = {
   5: 'M7 14.2 Q12 19.5 17 14.2', // sorriso grande
@@ -14,7 +15,7 @@ export function QualityFace({ grade, size = 20, title }) {
   const g = Math.min(5, Math.max(1, Math.round(grade)))
   const c = GRADES[g]
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" role="img" aria-label={title || `Qualidade: ${c.label}`} className="shrink-0">
+    <svg width={size} height={size} viewBox="0 0 24 24" role="img" aria-label={title || t('Qualidade: {x}', { x: c.label })} className="shrink-0">
       <circle cx="12" cy="12" r="11" fill={c.color} />
       {g === 1 ? (
         <>
@@ -47,7 +48,7 @@ export function QualityReasons({ reasons }) {
     <div className="mt-2 flex flex-wrap gap-1.5">
       {reasons.map(([k, t]) => (
         <span key={t} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${k === '+' ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300' : k === '-' ? 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300' : 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300'}`}>
-          {k === '+' ? '▲ ' : k === '-' ? '▼ ' : ''}{t}
+          {k === '+' ? '▲ ' : k === '-' ? '▼ ' : ''}{t.startsWith('Nutri-Score') ? t : tr(t)}
         </span>
       ))}
     </div>

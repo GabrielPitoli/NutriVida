@@ -6,6 +6,8 @@ import { MISSIONS, DAY_TARGET, PERFECT_BONUS } from '../lib/rewards'
 import { addDays, todayKey, fromKey } from '../lib/dates'
 import { fmt } from '../lib/nutrition'
 
+import { locale, plural, t } from '../i18n';
+
 const ICONS = { Sprout, Flame, Crown, Droplets, Beef, Target, Dumbbell, Star, ChefHat, Lightbulb, Medal }
 
 function FlameIcon({ on, size = 22 }) {
@@ -14,17 +16,17 @@ function FlameIcon({ on, size = 22 }) {
 
 function Week() {
   const { rewards } = useApp()
-  const t = todayKey()
-  const keys = Array.from({ length: 7 }, (_, i) => addDays(t, i - 6))
+  const today = todayKey()
+  const keys = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6))
   return (
     <div className="flex justify-between">
       {keys.map((k) => {
         const e = rewards.evals[k]
         const on = e?.secured
-        const isToday = k === t
+        const isToday = k === today
         return (
           <div key={k} className="flex flex-col items-center gap-1">
-            <span className={`text-[10px] font-bold uppercase ${isToday ? 'text-orange-500' : 'muted'}`}>{fromKey(k).toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3)}</span>
+            <span className={`text-[10px] font-bold uppercase ${isToday ? 'text-orange-500' : 'muted'}`}>{fromKey(k).toLocaleDateString(locale(), { weekday: 'short' }).slice(0, 3)}</span>
             <span className={`grid h-9 w-9 place-items-center rounded-full ${on ? 'bg-orange-500 text-white' : isToday ? 'border-2 border-dashed border-orange-300 dark:border-orange-400/40' : 'bg-slate-100 dark:bg-white/5'}`}>
               {on ? <Check size={18} strokeWidth={3} /> : <span className="text-[11px] font-bold muted tnum">{e?.count || ''}</span>}
             </span>
@@ -66,15 +68,15 @@ function RewardsSheet({ open, onClose }) {
   const { rewards } = useApp()
   const unlocked = rewards.badges.filter((b) => b.unlocked).length
   return (
-    <Sheet open={open} onClose={onClose} title="Conquistas" full>
+    <Sheet open={open} onClose={onClose} title={t('Conquistas')} full>
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-400 via-orange-500 to-rose-500 p-5 text-white">
         <Flame size={140} className="absolute -right-6 -top-4 fill-white/15 text-white/20" />
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-orange-100">Ofensiva</p>
-        <p className="font-display text-[56px] font-extrabold leading-none tnum">{rewards.streak}<span className="ml-2 text-xl">dia{rewards.streak === 1 ? '' : 's'}</span></p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-orange-100">{t('Ofensiva')}</p>
+        <p className="font-display text-[56px] font-extrabold leading-none tnum">{rewards.streak}<span className="ml-2 text-xl">{rewards.streak === 1 ? t('dia') : t('dias')}</span></p>
         <p className="mt-2 text-[13px] text-orange-50">
-          {rewards.todaySecured ? 'Dia de hoje garantido. Volte amanhã para continuar!' : `Cumpra ${DAY_TARGET} missões hoje para ${rewards.streak ? 'não perder sua ofensiva' : 'começar uma ofensiva'}.`}
+          {rewards.todaySecured ? t('Dia de hoje garantido. Volte amanhã para continuar!') : rewards.streak ? t('Cumpra {n} missões hoje para não perder sua ofensiva.', { n: DAY_TARGET }) : t('Cumpra {n} missões hoje para começar uma ofensiva.', { n: DAY_TARGET })}
         </p>
-        <p className="mt-1 text-[12px] text-orange-100">Recorde: {rewards.best} dia{rewards.best === 1 ? '' : 's'}</p>
+        <p className="mt-1 text-[12px] text-orange-100">{t('Recorde:')} {plural(rewards.best, '{n} dia', '{n} dias')}</p>
       </div>
       <div className="card mt-3"><Week /></div>
 
@@ -83,18 +85,18 @@ function RewardsSheet({ open, onClose }) {
           <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 font-display text-2xl font-extrabold text-amber-950">{rewards.level}</span>
           <div className="flex-1">
             <p className="font-display text-lg font-bold">{rewards.title}</p>
-            <p className="text-xs muted tnum">{fmt(rewards.xp)} XP no total · faltam {fmt(rewards.xpForNext - rewards.xpInLevel)} para o nível {rewards.level + 1}</p>
+            <p className="text-xs muted tnum">{fmt(rewards.xp)} {t('XP no total · faltam')} {fmt(rewards.xpForNext - rewards.xpInLevel)} {t('para o nível')} {rewards.level + 1}</p>
           </div>
         </div>
         <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-white/5"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-amber-500 transition-[width] duration-700" style={{ width: rewards.pct * 100 + '%' }} /></div>
       </div>
 
-      <h3 className="mb-2 mt-5 flex items-center justify-between px-1 font-display text-lg font-bold">Missões de hoje <span className="text-sm font-semibold muted tnum">{rewards.today.count}/{MISSIONS.length}</span></h3>
+      <h3 className="mb-2 mt-5 flex items-center justify-between px-1 font-display text-lg font-bold">{t('Missões de hoje')} <span className="text-sm font-semibold muted tnum">{rewards.today.count}/{MISSIONS.length}</span></h3>
       <div className="card"><MissionList />
-        <p className="mt-3 flex items-center gap-2 rounded-2xl bg-amber-50 p-3 text-[12px] text-amber-900 dark:bg-amber-400/10 dark:text-amber-200"><Star size={14} className="shrink-0 fill-amber-400 text-amber-400" /> Dia perfeito (5 de 5): +{PERFECT_BONUS} XP bônus. Cada registro também vale +2 XP (até 20 por dia).</p>
+        <p className="mt-3 flex items-center gap-2 rounded-2xl bg-amber-50 p-3 text-[12px] text-amber-900 dark:bg-amber-400/10 dark:text-amber-200"><Star size={14} className="shrink-0 fill-amber-400 text-amber-400" /> {t('Dia perfeito (5 de 5): +')}{PERFECT_BONUS} {t('XP bônus. Cada registro também vale +2 XP (até 20 por dia).')}</p>
       </div>
 
-      <h3 className="mb-2 mt-5 flex items-center justify-between px-1 font-display text-lg font-bold">Medalhas <span className="text-sm font-semibold muted tnum">{unlocked}/{rewards.badges.length}</span></h3>
+      <h3 className="mb-2 mt-5 flex items-center justify-between px-1 font-display text-lg font-bold">{t('Medalhas')} <span className="text-sm font-semibold muted tnum">{unlocked}/{rewards.badges.length}</span></h3>
       <div className="grid grid-cols-3 gap-2">
         {rewards.badges.map((b) => {
           const I = ICONS[b.icon] || Medal
@@ -111,9 +113,11 @@ function RewardsSheet({ open, onClose }) {
           )
         })}
       </div>
-      <p className="mt-4 flex gap-2 px-1 text-[11px] muted"><ShieldCheck size={14} className="shrink-0" /> Missões e XP são calculados a partir dos seus registros e valem para qualquer aparelho em que você abrir o app.</p>
+      <p className="mt-4 flex gap-2 px-1 text-[11px] muted"><ShieldCheck size={14} className="shrink-0" /> {t(
+          'Missões e XP são calculados a partir dos seus registros e valem para qualquer aparelho em que você abrir o app.'
+        )}</p>
     </Sheet>
-  )
+  );
 }
 
 /** Faixa compacta no topo do dashboard. */
@@ -122,7 +126,7 @@ export default function RewardsStrip() {
   const [open, setOpen] = useState(false)
   return (
     <>
-      <button onClick={() => setOpen(true)} className="card flex w-full items-center gap-3 !py-3 text-left active:scale-[0.99]" aria-label="Ver conquistas">
+      <button onClick={() => setOpen(true)} className="card flex w-full items-center gap-3 !py-3 text-left active:scale-[0.99]" aria-label={t('Ver conquistas')}>
         <span className="flex items-center gap-1">
           <FlameIcon on={rewards.todaySecured || rewards.streak > 0} size={26} />
           <span className={`font-display text-xl font-extrabold tnum ${rewards.streak ? 'text-orange-500' : 'muted'}`}>{rewards.streak}</span>
@@ -130,17 +134,17 @@ export default function RewardsStrip() {
         <span className="h-8 w-px bg-slate-200 dark:bg-white/10" />
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between text-[12px] font-bold">
-            <span className="flex items-center gap-1"><Zap size={13} className="fill-amber-400 text-amber-500" />Nível {rewards.level} · {rewards.title}</span>
-            <span className="muted tnum">{rewards.today.count}/{MISSIONS.length} missões</span>
+            <span className="flex items-center gap-1"><Zap size={13} className="fill-amber-400 text-amber-500" />{t('Nível')} {rewards.level} · {rewards.title}</span>
+            <span className="muted tnum">{rewards.today.count}/{MISSIONS.length} {t('missões')}</span>
           </span>
           <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/5"><span className="block h-full rounded-full bg-gradient-to-r from-amber-300 to-amber-500 transition-[width] duration-700" style={{ width: rewards.pct * 100 + '%' }} /></span>
         </span>
         <Trophy size={18} className="text-amber-500" />
       </button>
       {!rewards.todaySecured && rewards.streak > 0 && new Date().getHours() >= 18 && (
-        <p className="-mt-1 px-2 text-center text-[12px] font-semibold text-orange-600 dark:text-orange-400">Sua ofensiva de {rewards.streak} dia{rewards.streak > 1 ? 's' : ''} está em risco: faltam {DAY_TARGET - rewards.today.count} missão(ões).</p>
+        <p className="-mt-1 px-2 text-center text-[12px] font-semibold text-orange-600 dark:text-orange-400">{t('Sua ofensiva de')} {rewards.streak} {t('dia')}{rewards.streak > 1 ? 's' : ''} {t('está em risco: faltam')} {DAY_TARGET - rewards.today.count} {t('missão(ões).')}</p>
       )}
       <RewardsSheet open={open} onClose={() => setOpen(false)} />
     </>
-  )
+  );
 }

@@ -2,6 +2,8 @@ import { useEffect, useId, useRef } from 'react'
 import { X } from 'lucide-react'
 import { fmt } from '../lib/nutrition'
 
+import { t } from '../i18n';
+
 export function ProgressRing({ value, max, size = 180, stroke = 14, color = '#10b981', track, children, overColor = '#f97316' }) {
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
@@ -66,7 +68,7 @@ export function Sheet({ open, onClose, title, children, footer, full }) {
         <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-slate-300 dark:bg-white/20" />
         <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-3">
           <h2 id={titleId} className="font-display text-xl font-bold tracking-tight">{title}</h2>
-          <button onClick={onClose} aria-label="Fechar" className="grid h-9 w-9 place-items-center rounded-full bg-slate-200/70 text-slate-600 active:scale-90 dark:bg-white/10 dark:text-slate-300">
+          <button onClick={onClose} aria-label={t('Fechar')} className="grid h-9 w-9 place-items-center rounded-full bg-slate-200/70 text-slate-600 active:scale-90 dark:bg-white/10 dark:text-slate-300">
             <X size={18} />
           </button>
         </div>
@@ -74,22 +76,22 @@ export function Sheet({ open, onClose, title, children, footer, full }) {
         {footer && <div className="border-t border-slate-200/70 px-5 py-3 dark:border-white/10">{footer}</div>}
       </div>
     </div>
-  )
+  );
 }
 
 export function Stepper({ value, onChange, step = 1, min = 0, max = 9999, suffix, id }) {
   const set = (v) => onChange(Math.max(min, Math.min(max, Math.round(v * 100) / 100)))
   return (
     <div className="flex items-center gap-2">
-      <button type="button" onClick={() => set(value - step)} className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-100 text-xl font-bold active:scale-90 dark:bg-white/10" aria-label="Diminuir">−</button>
+      <button type="button" onClick={() => set(value - step)} className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-100 text-xl font-bold active:scale-90 dark:bg-white/10" aria-label={t('Diminuir')}>−</button>
       <div className="relative flex-1">
         <input id={id} inputMode="decimal" className="input text-center font-display text-lg font-bold tnum" value={value}
           onChange={(e) => { const v = parseFloat(e.target.value.replace(',', '.')); onChange(isNaN(v) ? 0 : v) }} />
         {suffix && <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm muted">{suffix}</span>}
       </div>
-      <button type="button" onClick={() => set(value + step)} className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-100 text-xl font-bold active:scale-90 dark:bg-white/10" aria-label="Aumentar">+</button>
+      <button type="button" onClick={() => set(value + step)} className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-100 text-xl font-bold active:scale-90 dark:bg-white/10" aria-label={t('Aumentar')}>+</button>
     </div>
-  )
+  );
 }
 
 export function NutrientGrid({ n, className = '' }) {
@@ -105,7 +107,7 @@ export function NutrientGrid({ n, className = '' }) {
       {items.map(([l, v, c]) => (
         <div key={l} className="rounded-2xl bg-slate-100/80 px-1 py-2 text-center dark:bg-white/5">
           <div className={`tnum font-display text-[15px] font-bold leading-tight ${c}`}>{v}</div>
-          <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide muted">{l}</div>
+          <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide muted">{t(l)}</div>
         </div>
       ))}
     </div>
@@ -114,8 +116,8 @@ export function NutrientGrid({ n, className = '' }) {
 
 export const MacroDots = ({ it }) => (
   <span className="tnum text-[11.5px] muted">
-    <span className="text-rose-500">P</span> {fmt(it.protein, 1)} · <span className="text-amber-500">C</span> {fmt(it.carbs, 1)} · <span className="text-violet-500">G</span> {fmt(it.fat, 1)}
-    {it.fiber ? <> · <span className="text-lime-600 dark:text-lime-400">F</span> {fmt(it.fiber, 1)}</> : null}
+    <span className="text-rose-500">{t('P')}</span> {fmt(it.protein, 1)} · <span className="text-amber-500">{t('C')}</span> {fmt(it.carbs, 1)} · <span className="text-violet-500">{t('G')}</span> {fmt(it.fat, 1)}
+    {it.fiber ? <> · <span className="text-lime-600 dark:text-lime-400">{t('F')}</span> {fmt(it.fiber, 1)}</> : null}
   </span>
 )
 

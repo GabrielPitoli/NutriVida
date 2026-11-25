@@ -1,4 +1,4 @@
-"""Gera public/products-br.json a partir do export público do Open Food Facts (licença ODbL).
+"""Gera src/data/products-br.json a partir do export público do Open Food Facts (licença ODbL).
 Mantém só produtos vendidos no Brasil, com código EAN e calorias, ordenados pelos mais escaneados.
 Uso: curl -sL <csv.gz> | gunzip | python3 scripts/build-products.py"""
 import csv, json, sys, os
@@ -37,5 +37,5 @@ for row in r:
 out.sort(key=lambda x: -x[-1])
 out = [x[:-1] for x in out[:25000]]
 json.dump({'source': 'Open Food Facts (ODbL) — openfoodfacts.org', 'fields': ['code', 'name', 'brand', 'kcal', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'satfat', 'sodiumMg', 'nutriscore', 'servingG'], 'items': out},
-          open(os.path.join(ROOT, 'public/products-br.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
+          open(os.path.join(ROOT, 'src/data/products-br.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
 print('total linhas', n, 'produtos BR', len(out), file=sys.stderr)

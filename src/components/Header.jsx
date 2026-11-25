@@ -2,6 +2,8 @@ import { ChevronLeft, ChevronRight, Cloud, CloudOff, HardDrive, Loader2 } from '
 import { useApp } from '../context/AppContext'
 import { addDays, dayLabel, todayKey } from '../lib/dates'
 
+import { t } from '../i18n';
+
 const SYNC = {
   local: { icon: HardDrive, text: 'Salvo no aparelho', cls: 'text-slate-500' },
   connecting: { icon: Loader2, text: 'Conectando…', cls: 'text-slate-500', spin: true },
@@ -15,8 +17,8 @@ export function SyncBadge() {
   const s = SYNC[syncStatus] || SYNC.local
   const I = s.icon
   return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${s.cls}`} title={s.text}>
-      <I size={13} className={s.spin ? 'animate-spin' : ''} /> {s.text}
+    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${s.cls}`} title={t(s.text)}>
+      <I size={13} className={s.spin ? 'animate-spin' : ''} /> {t(s.text)}
     </span>
   )
 }
@@ -26,11 +28,11 @@ export function DateSwitcher() {
   const isToday = date === todayKey()
   return (
     <div className="flex items-center gap-1 rounded-full bg-white p-1 shadow-card ring-1 ring-black/[0.03] dark:bg-white/5 dark:shadow-none">
-      <button aria-label="Dia anterior" onClick={() => setDate(addDays(date, -1))} className="grid h-8 w-8 place-items-center rounded-full active:bg-slate-100 dark:active:bg-white/10"><ChevronLeft size={18} /></button>
+      <button aria-label={t('Dia anterior')} onClick={() => setDate(addDays(date, -1))} className="grid h-8 w-8 place-items-center rounded-full active:bg-slate-100 dark:active:bg-white/10"><ChevronLeft size={18} /></button>
       <button onClick={() => setDate(todayKey())} className="min-w-[74px] px-1 text-center text-[13px] font-bold capitalize">{dayLabel(date)}</button>
-      <button aria-label="Próximo dia" disabled={isToday} onClick={() => setDate(addDays(date, 1))} className="grid h-8 w-8 place-items-center rounded-full disabled:opacity-30 active:bg-slate-100 dark:active:bg-white/10"><ChevronRight size={18} /></button>
+      <button aria-label={t('Próximo dia')} disabled={isToday} onClick={() => setDate(addDays(date, 1))} className="grid h-8 w-8 place-items-center rounded-full disabled:opacity-30 active:bg-slate-100 dark:active:bg-white/10"><ChevronRight size={18} /></button>
     </div>
-  )
+  );
 }
 
 export default function Header({ title, subtitle, right }) {

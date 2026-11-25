@@ -6,6 +6,7 @@ import { gradeItem } from '../lib/quality'
 import { FOODS_BY_ID } from '../data/foods'
 import { DEFAULT_MEALS } from '../data/mealPlans'
 import { todayKey, uid } from '../lib/dates'
+import { getLang, locale, plural, setLang, t } from '../i18n'
 
 const Ctx = createContext(null)
 export const useApp = () => useContext(Ctx)
@@ -49,7 +50,7 @@ export function AppProvider({ children }) {
     storage.connect((key, doc) => {
       const data = strip(doc)
       if (key === 'profile') setProfileState({ ...DEFAULT_PROFILE, ...data })
-      else if (key === 'settings') setSettingsState((s) => ({ ...s, ...data }))
+      else if (key === 'settings') { if (data.lang) setLang(data.lang); setSettingsState((s) => ({ ...s, ...data })) }
       else if (key === 'customFoods') setCustomFoods(data.items || [])
       else if (key.startsWith('day-')) setDays((d) => ({ ...d, [key.slice(4)]: data }))
       else if (key.startsWith('myrecipe-')) setMyRecipes(loadMyRecipes())
@@ -95,7 +96,7 @@ export function AppProvider({ children }) {
     for (const [k, d] of Object.entries(days)) out[k] = d
     return out
   }, [days, dataVersion])
-  const rewards = useMemo(() => summarize(allDays, calculateGoalsMerged(profile), { myRecipes: myRecipes.length }), [allDays, profile, myRecipes.length])
+  const rewards = useMemo(() => summarize(allDays, calculateGoalsMerged(profile), { myRecipes: myRecipes.length }), [allDays, profile, myRecipes.length, settings.lang])
   rewardsRef.current = rewards
 
   const notify = useCallback((msg, tone = 'ok') => {
@@ -119,19 +120,19 @@ export function AppProvider({ children }) {
     const a = totalsOf(prev), b = totalsOf(next)
     const c = { ...(next.celebrated || {}) }
     const target = goals
-    if (!c.water && a.water < target.water && b.water >= target.water) { c.water = true; celebrate({ kind: 'water', title: 'Meta de água batida!', sub: `${(b.water / 1000).toLocaleString('pt-BR')} L hoje. Seu corpo agradece.` }) }
-    else if (!c.protein && a.protein < target.protein && b.protein >= target.protein) { c.protein = true; celebrate({ kind: 'protein', title: 'Proteína do dia completa!', sub: `${Math.round(b.protein)} g de ${target.protein} g.` }) }
-    else if (!c.kcal && a.kcal < target.kcal * 0.95 && b.kcal >= target.kcal * 0.95 && b.kcal <= target.kcal * 1.1) { c.kcal = true; celebrate({ kind: 'kcal', title: 'Meta calórica atingida!', sub: 'Você chegou no seu alvo de energia do dia.' }) }
-    else if (b.mealsDone > a.mealsDone && b.mealsDone >= target.meals && !c.meals) { c.meals = true; celebrate({ kind: 'meals', title: `${b.mealsDone} refeições feitas!`, sub: 'Todas as refeições planejadas do dia.' }) }
+    if (!c.water && a.water < target.water && b.water >= target.water) { c.water = true; celebrate({ kind: 'water', title: t('Meta de água batida!'), sub: t('{n} L hoje. Seu corpo agradece.', { n: (b.water / 1000).toLocaleString(locale()) }) }) }
+    else if (!c.protein && a.protein < target.protein && b.protein >= target.protein) { c.protein = true; celebrate({ kind: 'protein', title: t('Proteína do dia completa!'), sub: t('{a} g de {b} g.', { a: Math.round(b.protein), b: target.protein }) }) }
+    else if (!c.kcal && a.kcal < target.kcal * 0.95 && b.kcal >= target.kcal * 0.95 && b.kcal <= target.kcal * 1.1) { c.kcal = true; celebrate({ kind: 'kcal', title: t('Meta calórica atingida!'), sub: t('Você chegou no seu alvo de energia do dia.') }) }
+    else if (b.mealsDone > a.mealsDone && b.mealsDone >= target.meals && !c.meals) { c.meals = true; celebrate({ kind: 'meals', title: t('{n} refeições feitas!', { n: b.mealsDone }), sub: t('Todas as refeições planejadas do dia.') }) }
     // Recompensas: dia garantido (ofensiva) e subida de nível
     const ea = evaluateDay(prev, target), eb = evaluateDay(next, target)
     if (!c.secured && ea.count < DAY_TARGET && eb.count >= DAY_TARGET) {
       c.secured = true
-      celebrate({ kind: 'streak', title: `Ofensiva de ${rewardsRef.current.streak + (rewardsRef.current.todaySecured ? 0 : 1)} dia${rewardsRef.current.streak ? 's' : ''}!`, sub: `${DAY_TARGET} missões cumpridas. Seu dia está garantido.` })
+      celebrate({ kind: 'streak', title: plural(rewardsRef.current.streak + (rewardsRef.current.todaySecured ? 0 : 1), 'Ofensiva de {n} dia!', 'Ofensiva de {n} dias!'), sub: t('{n} missões cumpridas. Seu dia está garantido.', { n: DAY_TARGET }) })
     } else {
       const before = levelInfo(rewardsRef.current.xp).level
       const after = levelInfo(rewardsRef.current.xp - ea.xp + eb.xp).level
-      if (after > before) celebrate({ kind: 'level', title: `Nível ${after}!`, sub: `Você agora é ${levelInfo(rewardsRef.current.xp - ea.xp + eb.xp).title}.` })
+      if (after > before) celebrate({ kind: 'level', title: t('Nível {n}!', { n: after }), sub: t('Você agora é {x}.', { x: levelInfo(rewardsRef.current.xp - ea.xp + eb.xp).title }) })
     }
     if (eb.xp > ea.xp) setXpGain({ amount: eb.xp - ea.xp, id: uid() })
     next.celebrated = c
@@ -149,8 +150,8 @@ export function AppProvider({ children }) {
       return d
     })
     const meal = day.meals.find((m) => m.id === mealId)
-    if (meal && meal.items.length === 0) notify(`${meal.name} registrado`, 'meal')
-    else notify(label || 'Alimento adicionado')
+    if (meal && meal.items.length === 0) notify(t('{x} registrado', { x: t(meal.name) }), 'meal')
+    else notify(label || t('Alimento adicionado'))
     return res
   }, [date, day, updateDay, notify])
 
@@ -164,7 +165,7 @@ export function AppProvider({ children }) {
 
   const addMeal = useCallback((name, time) => {
     updateDay(date, (d) => { d.meals.push({ id: 'custom-' + uid(), name, time: time || '', custom: true, items: [] }); d.meals.sort((a, b) => (a.time || '99').localeCompare(b.time || '99')); return d })
-    notify('Refeição criada')
+    notify(t('Refeição criada'))
   }, [date, updateDay, notify])
 
   const removeMeal = useCallback((mealId) => {
@@ -181,7 +182,7 @@ export function AppProvider({ children }) {
       }
       return d
     })
-    notify('Cardápio aplicado ao dia', 'meal')
+    notify(t('Cardápio aplicado ao dia'), 'meal')
   }, [date, updateDay, notify])
 
   // ---------- ações: água ----------
@@ -197,7 +198,7 @@ export function AppProvider({ children }) {
   const addActivity = useCallback((type, intensity, minutes, manualKcal) => {
     const kcal = manualKcal ?? activityKcal(type, intensity, minutes, profile.weight)
     updateDay(date, (d) => { d.activities.push({ id: uid(), type, intensity, minutes, kcal, t: Date.now() }); return d })
-    notify(`Atividade registrada · ${kcal} kcal`, 'activity')
+    notify(t('Atividade registrada · {n} kcal', { n: kcal }), 'activity')
   }, [date, updateDay, profile.weight, notify])
   const removeActivity = useCallback((id) => {
     updateDay(date, (d) => { d.activities = d.activities.filter((a) => a.id !== id); return d })
@@ -208,12 +209,17 @@ export function AppProvider({ children }) {
     setProfileState((p) => {
       const next = { ...p, ...patch }
       if (patch.weight && patch.weight !== p.weight) {
-        const t = todayKey()
-        next.weightLog = [...(p.weightLog || []).filter((w) => w.date !== t), { date: t, kg: patch.weight }].slice(-120)
+        const today = todayKey()
+        next.weightLog = [...(p.weightLog || []).filter((w) => w.date !== today), { date: today, kg: patch.weight }].slice(-120)
       }
       storage.set('profile', next)
       return next
     })
+  }, [])
+
+  const setLanguage = useCallback((lang) => {
+    setLang(lang)
+    setSettingsState((s) => { const n = { ...s, lang }; storage.set('settings', n); return n })
   }, [])
 
   const setTheme = useCallback((theme) => {
@@ -230,13 +236,13 @@ export function AppProvider({ children }) {
     const r = { ...recipe, id: recipe.id || 'mine-' + uid(), mine: true, createdAt: recipe.createdAt || Date.now() }
     storage.set('myrecipe-' + r.id, r)
     setMyRecipes(loadMyRecipes())
-    notify(recipe.id ? 'Receita atualizada' : 'Receita salva em Minhas receitas')
+    notify(recipe.id ? t('Receita atualizada') : t('Receita salva em Minhas receitas'))
     return r
   }, [notify])
   const deleteMyRecipe = useCallback((id) => {
     storage.remove('myrecipe-' + id)
     setMyRecipes(loadMyRecipes())
-    notify('Receita excluída')
+    notify(t('Receita excluída'))
   }, [notify])
 
   const removeCustomFood = useCallback((id) => {
@@ -247,7 +253,7 @@ export function AppProvider({ children }) {
     const d = newDay()
     setDays((x) => ({ ...x, [date]: d }))
     storage.set('day-' + date, d)
-    notify('Dia limpo')
+    notify(t('Dia limpo'))
   }, [date, notify])
 
   const history = useMemo(() => {
@@ -267,7 +273,7 @@ export function AppProvider({ children }) {
   const totals = useMemo(() => totalsOf(day), [day])
 
   const value = {
-    profile, updateProfile, settings, setTheme,
+    profile, updateProfile, settings, setTheme, setLanguage, lang: settings.lang || getLang(),
     goals, calculated,
     date, setDate, day, totals, history,
     addFoods, removeFood, clearMeal, addMeal, removeMeal, applyPlan,

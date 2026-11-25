@@ -1,3 +1,4 @@
+import { t, isEn } from '../i18n'
 /**
  * IA integrada (Claude) — disponível quando o app roda no claude.ai (capacidade `sample`).
  * Cada chamada é independente: enviamos instruções + dados + formato de resposta.
@@ -41,22 +42,25 @@ export function getDictation() {
 
 export function aiErrorText(e) {
   switch (e?.code) {
-    case 'not_granted': return 'Você não permitiu o uso da IA neste app. Dá para liberar no menu de permissões do app.'
-    case 'rate_limited': return 'Muitos pedidos seguidos. Espere um minuto e tente de novo.'
-    case 'cancelled': return 'Pedido cancelado.'
-    case 'invalid_json': return 'A IA respondeu num formato inesperado. Tente de novo ou descreva de outro jeito.'
-    case 'image_rejected': return 'Não consegui ler essa imagem. Tente outra foto (JPG ou PNG).'
-    case 'images_unavailable': return 'Envio de fotos para a IA não está disponível aqui.'
-    case 'sampling_disabled': return 'A IA está desativada para a sua conta.'
-    case 'bad_key': return 'Chave de API inválida ou sem permissão. Confira em Metas → Inteligência artificial.'
-    case 'bad_request': return 'A API recusou o pedido. Verifique se sua conta da API tem créditos (console.anthropic.com → Billing).'
-    case 'refused': return 'A IA não pôde responder a esse pedido. Tente descrever de outro jeito.'
-    case 'network': return 'Sem conexão com a IA. Verifique sua internet.'
-    default: return 'A IA não respondeu agora. Verifique a conexão e tente de novo.'
+    case 'not_granted': return t('Você não permitiu o uso da IA neste app. Dá para liberar no menu de permissões do app.')
+    case 'rate_limited': return t('Muitos pedidos seguidos. Espere um minuto e tente de novo.')
+    case 'cancelled': return t('Pedido cancelado.')
+    case 'invalid_json': return t('A IA respondeu num formato inesperado. Tente de novo ou descreva de outro jeito.')
+    case 'image_rejected': return t('Não consegui ler essa imagem. Tente outra foto (JPG ou PNG).')
+    case 'images_unavailable': return t('Envio de fotos para a IA não está disponível aqui.')
+    case 'sampling_disabled': return t('A IA está desativada para a sua conta.')
+    case 'bad_key': return t('Chave de API inválida ou sem permissão. Confira em Metas → Inteligência artificial.')
+    case 'bad_request': return t('A API recusou o pedido. Verifique se sua conta da API tem créditos (console.anthropic.com → Billing).')
+    case 'refused': return t('A IA não pôde responder a esse pedido. Tente descrever de outro jeito.')
+    case 'network': return t('Sem conexão com a IA. Verifique sua internet.')
+    default: return t('A IA não respondeu agora. Verifique a conexão e tente de novo.')
   }
 }
 
-const FOOD_SHAPE = `{"name": string (nome em português), "grams": number, "portion": string (ex.: "2 unidades"), "kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number, "quality": 1-5 (qualidade nutricional: 5 excelente, 4 bom, 3 normal, 2 ruim, 1 péssimo; considere processamento, açúcar, sódio, gordura saturada, fibras e proteína)}`
+// O idioma das respostas da IA acompanha o idioma do app
+const LANG_RULE = () => (isEn() ? '\nIMPORTANTE: escreva todos os nomes, descrições e textos em INGLÊS (English).' : '\nEscreva nomes e textos em português do Brasil.')
+
+const FOOD_SHAPE = `{"name": string (nome no idioma pedido), "grams": number, "portion": string (ex.: "2 unidades"), "kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number, "quality": 1-5 (qualidade nutricional: 5 excelente, 4 bom, 3 normal, 2 ruim, 1 péssimo; considere processamento, açúcar, sódio, gordura saturada, fibras e proteína)}`
 
 const num = (v) => (Number.isFinite(+v) ? Math.max(0, Math.round(+v * 10) / 10) : 0)
 export function cleanFoods(list) {
@@ -76,7 +80,7 @@ export async function analyzePlate(file, hint, signal) {
 Identifique cada alimento visível e estime a porção em gramas pelo tamanho no prato (use talheres e o prato como referência).
 Use valores nutricionais da tabela TACO/USDA para a porção estimada.${hint ? `\nObservação da pessoa: ${hint}` : ''}
 Responda APENAS com JSON: {"description": string curta, "foods": [${FOOD_SHAPE}], "confidence": "alta"|"média"|"baixa"}
-Se a imagem não for comida, responda {"description": "não parece uma refeição", "foods": []}.`,
+Se a imagem não for comida, responda {"description": "não parece uma refeição", "foods": []}.${LANG_RULE()}`,
     { images: [file], signal, modelTier: 'default', cache: false },
   )
   return { description: res?.description || '', confidence: res?.confidence || '', foods: cleanFoods(res?.foods) }
@@ -88,6 +92,7 @@ export async function readLabel(file, signal) {
   const r = await ai.sample.json(
     `A imagem é a embalagem ou a tabela nutricional de um produto alimentício brasileiro.
 Leia o nome do produto e os valores da tabela. Converta para 100 g (ou 100 ml) e informe a porção indicada no rótulo.
+${LANG_RULE()}
 Responda APENAS com JSON: {"name": string, "brand": string|null, "portionGrams": number|null, "per100": {"kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number, "sugar": number|null, "satfat": number|null, "sodiumMg": number|null}}`,
     { images: [file], signal, cache: false },
   )
@@ -100,7 +105,7 @@ Responda APENAS com JSON: {"name": string, "brand": string|null, "portionGrams":
 /** Chat com a nutricionista IA. `turns` = [{role, content}] mantidos pela página. */
 export async function chat(turns, ctx, { signal, onText } = {}) {
   const ai = await getAI()
-  const rules = `Você é a "Nutri", assistente de nutrição do app NutriVida. Fale português do Brasil, de forma curta, calorosa e prática.
+  const rules = `Você é a "Nutri", assistente de nutrição do app NutriVida. Fale de forma curta, calorosa e prática.
 Dados da pessoa: ${ctx.profile}
 Metas diárias: ${ctx.goals}
 Hoje até agora: ${ctx.today}
@@ -109,6 +114,7 @@ Hora atual: ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: 
 
 Quando a pessoa contar o que comeu ou pedir para registrar algo, liste os alimentos em "foods" com porções e valores (tabela TACO/USDA) e escolha a refeição mais provável em "meal".
 Quando for só uma pergunta ou pedido de dica, deixe "foods" vazio. Nunca invente que já registrou: a pessoa confirma no app.
+${isEn() ? 'Responda em INGLÊS (English), mesmo que a pessoa escreva em português.' : 'Responda em português do Brasil.'}
 Responda SEMPRE e APENAS com JSON: {"reply": string (até 90 palavras), "meal": string|null, "foods": [${FOOD_SHAPE}]}`
   const res = await ai.sample.json([{ role: 'user', content: rules }, ...turns], { signal, onText, cache: false, modelTier: 'default' })
   return { reply: String(res?.reply || '').slice(0, 1200), meal: res?.meal || null, foods: cleanFoods(res?.foods) }
@@ -119,7 +125,7 @@ export async function recipeFromIdea(idea, signal) {
   const ai = await getAI()
   const r = await ai.sample.json(
     `Crie uma receita saudável a partir desta ideia de uma pessoa: "${idea}".
-Use ingredientes comuns no Brasil, medidas caseiras e gramas. Calcule a tabela nutricional POR PORÇÃO (TACO/USDA).
+Use ingredientes comuns no Brasil, medidas caseiras e gramas. Calcule a tabela nutricional POR PORÇÃO (TACO/USDA).${LANG_RULE()}
 Responda APENAS com JSON: {"name": string, "category": "cafe"|"almoco"|"lanche"|"jantar"|"treino", "tags": array de "alta-proteina"|"baixa-caloria"|"energia"|"vegetariana",
 "time": number (minutos), "servings": number, "ingredients": [string], "steps": [string],
 "nutrition": {"kcal": number, "protein": number, "carbs": number, "fat": number, "fiber": number}}`,
